@@ -13,16 +13,13 @@ type SignedExecutionPayloadBidHeze struct {
 	Signature string                   `json:"signature"`
 }
 
-// BeaconBlockBodyHeze is the Gloas body with the Heze bid.
-// TODO(heze): Eth1Data and Deposits stay until EIP-8015.
+// BeaconBlockBodyHeze is the Gloas body without eth1_data and deposits (EIP-8015).
 type BeaconBlockBodyHeze struct {
 	RandaoReveal              string                         `json:"randao_reveal"`
-	Eth1Data                  *Eth1Data                      `json:"eth1_data"`
 	Graffiti                  string                         `json:"graffiti"`
 	ProposerSlashings         []*ProposerSlashing            `json:"proposer_slashings"`
 	AttesterSlashings         []*AttesterSlashingElectra     `json:"attester_slashings"`
 	Attestations              []*AttestationElectra          `json:"attestations"`
-	Deposits                  []*Deposit                     `json:"deposits"`
 	VoluntaryExits            []*SignedVoluntaryExit         `json:"voluntary_exits"`
 	SyncAggregate             *SyncAggregate                 `json:"sync_aggregate"`
 	BLSToExecutionChanges     []*SignedBLSToExecutionChange  `json:"bls_to_execution_changes"`
