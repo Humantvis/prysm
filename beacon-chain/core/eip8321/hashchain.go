@@ -1,4 +1,4 @@
-package gloas
+package eip8321
 
 import (
 	"errors"

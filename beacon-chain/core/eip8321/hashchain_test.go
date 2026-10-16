@@ -1,11 +1,11 @@
-package gloas_test
+package eip8321_test
 
 import (
 	"encoding/hex"
 	"errors"
 	"testing"
 
-	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/gloas"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/eip8321"
 )
 
 func mustHex32(t *testing.T, s string) [32]byte {
@@ -30,7 +30,7 @@ func seed(b byte) [32]byte {
 // Known-answer values computed with the Python `blake3` package, the same
 // library the consensus-specs use to generate the official test vectors.
 func TestHashChainStep_KnownAnswer(t *testing.T) {
-	c1 := gloas.HashChainStep(seed(0x01))
+	c1 := eip8321.HashChainStep(seed(0x01))
 	want := mustHex32(t, "b16fcaaa6cf97c506a9ca4c4e04e766cec67d5e1bd308152be59d082bb52f187")
 	if c1 != want {
 		t.Fatalf("c1 = %x, want %x", c1, want)
@@ -38,7 +38,7 @@ func TestHashChainStep_KnownAnswer(t *testing.T) {
 }
 
 func TestComputeHashChain_KnownAnswer(t *testing.T) {
-	chain, err := gloas.ComputeHashChain(seed(0x01), 3)
+	chain, err := eip8321.ComputeHashChain(seed(0x01), 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,33 +61,33 @@ func TestComputeHashChain_KnownAnswer(t *testing.T) {
 }
 
 func TestVerifyHashChainLink(t *testing.T) {
-	chain, err := gloas.ComputeHashChain(seed(0x42), 16)
+	chain, err := eip8321.ComputeHashChain(seed(0x42), 16)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Every link is the preimage of the next one.
 	for i := 1; i < len(chain); i++ {
-		if !gloas.VerifyHashChainLink(chain[i-1], chain[i]) {
+		if !eip8321.VerifyHashChainLink(chain[i-1], chain[i]) {
 			t.Fatalf("link %d does not verify against %d", i-1, i)
 		}
 	}
 	commitment := chain[len(chain)-1]
 	// Skipping a link must fail.
-	if gloas.VerifyHashChainLink(chain[len(chain)-3], commitment) {
+	if eip8321.VerifyHashChainLink(chain[len(chain)-3], commitment) {
 		t.Fatal("skipped link must not verify")
 	}
 	// Revealing the commitment itself must fail.
-	if gloas.VerifyHashChainLink(commitment, commitment) {
+	if eip8321.VerifyHashChainLink(commitment, commitment) {
 		t.Fatal("commitment is not its own preimage")
 	}
 	// The zero value must fail.
-	if gloas.VerifyHashChainLink([32]byte{}, commitment) {
+	if eip8321.VerifyHashChainLink([32]byte{}, commitment) {
 		t.Fatal("zero reveal must not verify")
 	}
 }
 
 func TestComputeHashChain_LengthZero(t *testing.T) {
-	chain, err := gloas.ComputeHashChain(seed(0x07), 0)
+	chain, err := eip8321.ComputeHashChain(seed(0x07), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,8 +97,8 @@ func TestComputeHashChain_LengthZero(t *testing.T) {
 }
 
 func TestComputeHashChain_ZeroSecretRejected(t *testing.T) {
-	_, err := gloas.ComputeHashChain([32]byte{}, 4)
-	if !errors.Is(err, gloas.ErrZeroHashChainLink) {
+	_, err := eip8321.ComputeHashChain([32]byte{}, 4)
+	if !errors.Is(err, eip8321.ErrZeroHashChainLink) {
 		t.Fatalf("want ErrZeroHashChainLink, got %v", err)
 	}
 }
