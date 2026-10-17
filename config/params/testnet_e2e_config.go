@@ -72,6 +72,7 @@ func E2EMainnetTestConfig() *BeaconChainConfig {
 	e2eConfig.FuluForkVersion = []byte{6, 0, 0, 254}
 	e2eConfig.GloasForkVersion = []byte{7, 0, 0, 254}
 	e2eConfig.HezeForkVersion = []byte{8, 0, 0, 254}
+	e2eConfig.Eip8321ForkVersion = []byte{0xe8, 0x32, 0x10, 254}
 
 	// Deneb changes.
 	e2eConfig.MinPerEpochChurnLimit = 2

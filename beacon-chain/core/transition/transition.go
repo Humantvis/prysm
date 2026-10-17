@@ -12,6 +12,7 @@ import (
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/altair"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/capella"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/deneb"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/eip8321"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/electra"
 	e "github.com/OffchainLabs/prysm/v7/beacon-chain/core/epoch"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/epoch/precompute"
@@ -439,6 +440,14 @@ func UpgradeState(ctx context.Context, state state.BeaconState) (state.BeaconSta
 		state, err = heze.UpgradeToHeze(state)
 		if err != nil {
 			tracing.AnnotateError(span, err)
+			return nil, err
+		}
+		upgraded = true
+	}
+
+	if time.CanUpgradeToEip8321(slot) {
+		state, err = eip8321.UpgradeToEip8321(state)
+		if err != nil {
 			return nil, err
 		}
 		upgraded = true

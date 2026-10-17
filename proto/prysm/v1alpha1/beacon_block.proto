@@ -21,6 +21,7 @@ import "proto/prysm/v1alpha1/withdrawals.proto";
 import "proto/prysm/v1alpha1/beacon_core_types.proto";
 import "proto/prysm/v1alpha1/gloas.proto";
 import "proto/prysm/v1alpha1/heze.proto";
+import "proto/prysm/v1alpha1/eip8321.proto";
 import "proto/engine/v1/execution_engine.proto";
 import "proto/engine/v1/electra.proto";
 
@@ -79,6 +80,7 @@ message GenericSignedBeaconBlock {
 
     // Representing a signed, post-Heze fork beacon block.
     SignedBeaconBlockHeze heze = 14;
+    SignedBeaconBlockEip8321 eip8321 = 15;
   }
   bool is_blinded = 100;
   reserved 101; // Deprecated fields
@@ -132,6 +134,7 @@ message GenericBeaconBlock {
 
     // Representing a post-Heze fork beacon block.
     BeaconBlockHeze heze = 15;
+    BeaconBlockEip8321 eip8321 = 16;
   }
   bool is_blinded = 100;
   string payload_value = 101;

@@ -190,7 +190,23 @@ func TestNewProgressiveStateFieldsSchema(t *testing.T) {
 }
 
 func TestProgressiveStateSchemaForVersion_Unsupported(t *testing.T) {
-	schema, ok := ProgressiveStateSchemaForVersion(version.Heze + 1)
+	schema, ok := ProgressiveStateSchemaForVersion(version.Eip8321 + 1)
 	require.Equal(t, false, ok)
 	require.IsNil(t, schema)
+}
+
+func TestEip8321ProgressiveStateSchema(t *testing.T) {
+	schema, ok := ProgressiveStateSchemaForVersion(version.Eip8321)
+	require.Equal(t, true, ok)
+	require.Equal(t, 44, len(schema.Fields()))
+	require.Equal(t, 48, len(schema.ActiveFields()))
+	gaps := map[int]bool{8: true, 9: true, 10: true, 28: true}
+	for i, active := range schema.ActiveFields() {
+		require.Equal(t, !gaps[i], active)
+	}
+	for _, field := range schema.Fields() {
+		index, found := schema.GetFieldIndex(field)
+		require.Equal(t, true, found)
+		require.Equal(t, field.RealPosition(), index)
+	}
 }

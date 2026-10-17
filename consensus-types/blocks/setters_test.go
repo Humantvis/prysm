@@ -3,7 +3,6 @@ package blocks
 import (
 	"testing"
 
-	bitfield "github.com/OffchainLabs/go-bitfield"
 	consensus_types "github.com/OffchainLabs/prysm/v7/consensus-types"
 	enginev1 "github.com/OffchainLabs/prysm/v7/proto/engine/v1"
 	eth "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
@@ -26,7 +25,7 @@ func TestSignedBeaconBlock_SetPayloadAttestations(t *testing.T) {
 		sb := newTestSignedBeaconBlock(version.Gloas)
 		payload := []*eth.PayloadAttestation{
 			{
-				AggregationBits: bitfield.NewBitvector512(),
+				AggregationBits: eth.NewPayloadAttestationAggregationBits(),
 				Data: &eth.PayloadAttestationData{
 					BeaconBlockRoot:   []byte{0x01, 0x02},
 					PayloadPresent:    true,

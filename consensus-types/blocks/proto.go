@@ -211,6 +211,19 @@ func (b *SignedBeaconBlock) Proto() (proto.Message, error) { // nolint:gocognit
 			Block:     block,
 			Signature: b.signature[:],
 		}, nil
+	case version.Eip8321:
+		var block *eth.BeaconBlockEip8321
+		if blockMessage != nil {
+			var ok bool
+			block, ok = blockMessage.(*eth.BeaconBlockEip8321)
+			if !ok {
+				return nil, errIncorrectBlockVersion
+			}
+		}
+		return &eth.SignedBeaconBlockEip8321{
+			Block:     block,
+			Signature: b.signature[:],
+		}, nil
 	default:
 		return nil, errors.New("unsupported signed beacon block version")
 	}
@@ -451,6 +464,22 @@ func (b *BeaconBlock) Proto() (proto.Message, error) { // nolint:gocognit
 			}
 		}
 		return &eth.BeaconBlockHeze{
+			Slot:          b.slot,
+			ProposerIndex: b.proposerIndex,
+			ParentRoot:    b.parentRoot[:],
+			StateRoot:     b.stateRoot[:],
+			Body:          body,
+		}, nil
+	case version.Eip8321:
+		var body *eth.BeaconBlockBodyEip8321
+		if bodyMessage != nil {
+			var ok bool
+			body, ok = bodyMessage.(*eth.BeaconBlockBodyEip8321)
+			if !ok {
+				return nil, errIncorrectBodyVersion
+			}
+		}
+		return &eth.BeaconBlockEip8321{
 			Slot:          b.slot,
 			ProposerIndex: b.proposerIndex,
 			ParentRoot:    b.parentRoot[:],
@@ -755,6 +784,22 @@ func (b *BeaconBlockBody) Proto() (proto.Message, error) {
 			SignedExecutionPayloadBid: b.signedExecutionPayloadBidHeze,
 			PayloadAttestations:       b.payloadAttestations,
 			ParentExecutionRequests:   b.parentExecutionRequests,
+		}, nil
+	case version.Eip8321:
+		return &eth.BeaconBlockBodyEip8321{
+			HashChainReveal:               b.hashChainReveal[:],
+			RandaoCommitmentRegistrations: b.randaoCommitmentRegistrations,
+			RandaoReveal:                  b.randaoReveal[:],
+			Graffiti:                      b.graffiti[:],
+			ProposerSlashings:             b.proposerSlashings,
+			AttesterSlashings:             b.attesterSlashingsGloas,
+			Attestations:                  b.attestationsGloas,
+			VoluntaryExits:                b.voluntaryExits,
+			SyncAggregate:                 b.syncAggregate,
+			BlsToExecutionChanges:         b.blsToExecutionChanges,
+			SignedExecutionPayloadBid:     b.signedExecutionPayloadBidHeze,
+			PayloadAttestations:           b.payloadAttestations,
+			ParentExecutionRequests:       b.parentExecutionRequests,
 		}, nil
 	default:
 		return nil, errors.New("unsupported beacon block body version")
@@ -1687,6 +1732,74 @@ func initBlockBodyFromProtoHeze(pb *eth.BeaconBlockBodyHeze) (*BeaconBlockBody, 
 	}
 	b := &BeaconBlockBody{
 		version:                       version.Heze,
+		randaoReveal:                  bytesutil.ToBytes96(pb.RandaoReveal),
+		graffiti:                      bytesutil.ToBytes32(pb.Graffiti),
+		proposerSlashings:             pb.ProposerSlashings,
+		attesterSlashingsGloas:        pb.AttesterSlashings,
+		attestationsGloas:             pb.Attestations,
+		voluntaryExits:                pb.VoluntaryExits,
+		syncAggregate:                 pb.SyncAggregate,
+		blsToExecutionChanges:         pb.BlsToExecutionChanges,
+		signedExecutionPayloadBidHeze: pb.SignedExecutionPayloadBid,
+		payloadAttestations:           pb.PayloadAttestations,
+		parentExecutionRequests:       per,
+	}
+	return b, nil
+}
+
+func initSignedBlockFromProtoEip8321(pb *eth.SignedBeaconBlockEip8321) (*SignedBeaconBlock, error) {
+	if pb == nil {
+		return nil, errNilBlock
+	}
+
+	block, err := initBlockFromProtoEip8321(pb.Block)
+	if err != nil {
+		return nil, err
+	}
+	b := &SignedBeaconBlock{
+		version:   version.Eip8321,
+		block:     block,
+		signature: bytesutil.ToBytes96(pb.Signature),
+	}
+	return b, nil
+}
+
+func initBlockFromProtoEip8321(pb *eth.BeaconBlockEip8321) (*BeaconBlock, error) {
+	if pb == nil {
+		return nil, errNilBlock
+	}
+
+	body, err := initBlockBodyFromProtoEip8321(pb.Body)
+	if err != nil {
+		return nil, err
+	}
+	b := &BeaconBlock{
+		version:       version.Eip8321,
+		slot:          pb.Slot,
+		proposerIndex: pb.ProposerIndex,
+		parentRoot:    bytesutil.ToBytes32(pb.ParentRoot),
+		stateRoot:     bytesutil.ToBytes32(pb.StateRoot),
+		body:          body,
+	}
+	return b, nil
+}
+
+func initBlockBodyFromProtoEip8321(pb *eth.BeaconBlockBodyEip8321) (*BeaconBlockBody, error) {
+	if pb == nil {
+		return nil, errNilBlockBody
+	}
+
+	if len(pb.HashChainReveal) != 0 && len(pb.HashChainReveal) != 32 {
+		return nil, fmt.Errorf("hash chain reveal must be 32 bytes")
+	}
+	per := pb.ParentExecutionRequests
+	if per == nil {
+		per = &enginev1.ExecutionRequestsGloas{}
+	}
+	b := &BeaconBlockBody{
+		hashChainReveal:               bytesutil.ToBytes32(pb.HashChainReveal),
+		randaoCommitmentRegistrations: pb.RandaoCommitmentRegistrations,
+		version:                       version.Eip8321,
 		randaoReveal:                  bytesutil.ToBytes96(pb.RandaoReveal),
 		graffiti:                      bytesutil.ToBytes32(pb.Graffiti),
 		proposerSlashings:             pb.ProposerSlashings,

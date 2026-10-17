@@ -176,9 +176,8 @@ func TestContainerRootProgressive(t *testing.T) {
 	got, err := ssz.ContainerRootProgressive(fieldRoots, activeFields)
 	require.NoError(t, err)
 
-	body := ssz.MerkleizeProgressiveChunks(fieldRoots)
-	expected, err := ssz.MixInActiveFields(body, activeFields)
-	require.NoError(t, err)
+	// eth-ssz-specs 0.1.0: ProgressiveContainer with active_fields(3, gaps=(1,)).
+	expected := [32]byte{58, 101, 132, 134, 78, 40, 67, 125, 166, 125, 234, 194, 136, 196, 108, 155, 96, 206, 229, 88, 128, 177, 155, 18, 207, 230, 138, 125, 29, 91, 196, 145}
 	require.Equal(t, expected, got)
 }
 

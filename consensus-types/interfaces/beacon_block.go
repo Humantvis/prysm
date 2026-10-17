@@ -52,6 +52,8 @@ type ReadOnlyBeaconBlock interface {
 // ReadOnlyBeaconBlockBody describes the method set employed by an object
 // that is a beacon block body.
 type ReadOnlyBeaconBlockBody interface {
+	HashChainReveal() ([32]byte, error)
+	RandaoCommitmentRegistrations() ([]*ethpb.SignedRandaoCommitmentRegistration, error)
 	Version() int
 	RandaoReveal() [field_params.BLSSignatureLength]byte
 	Eth1Data() *ethpb.Eth1Data
@@ -88,6 +90,8 @@ type SignedBeaconBlock interface {
 	SetGraffiti([]byte)
 	SetEth1Data(*ethpb.Eth1Data)
 	SetRandaoReveal([]byte)
+	SetHashChainReveal([]byte) error
+	SetRandaoCommitmentRegistrations([]*ethpb.SignedRandaoCommitmentRegistration) error
 	SetStateRoot([]byte)
 	SetParentRoot([]byte)
 	SetProposerIndex(idx primitives.ValidatorIndex)

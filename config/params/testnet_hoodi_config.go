@@ -49,6 +49,7 @@ func HoodiConfig() *BeaconChainConfig {
 	cfg.GloasForkEpoch = 132352 // 2026-10-26 17:42:48 UTC
 	cfg.GloasForkVersion = []byte{0x80, 0x00, 0x09, 0x10}
 	cfg.HezeForkVersion = []byte{0x90, 0x00, 0x09, 0x10}
+	cfg.Eip8321ForkVersion = []byte{0xe8, 0x32, 0x10, 3}
 	cfg.TerminalTotalDifficulty = "0"
 	cfg.DepositContractAddress = "0x00000000219ab540356cBB839Cbe05303d7705Fa"
 	cfg.BlobSchedule = []BlobScheduleEntry{

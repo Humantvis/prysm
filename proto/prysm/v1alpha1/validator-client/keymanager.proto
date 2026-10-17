@@ -4,6 +4,7 @@ package ethereum.validator.accounts.v2;
 import "proto/eth/ext/options.proto";
 import "proto/prysm/v1alpha1/attestation.proto";
 import "proto/prysm/v1alpha1/beacon_block.proto";
+import "proto/prysm/v1alpha1/eip8321.proto";
 import "proto/prysm/v1alpha1/beacon_core_types.proto";
 import "proto/prysm/v1alpha1/gloas.proto";
 import "proto/prysm/v1alpha1/gloas_builder_api.proto";
@@ -92,6 +93,7 @@ message SignRequest {
 
     // Heze objects.
     ethereum.eth.v1alpha1.BeaconBlockHeze block_heze = 128;
+    ethereum.eth.v1alpha1.BeaconBlockEip8321 block_eip8321 = 130;
     ethereum.eth.v1alpha1.InclusionList inclusion_list = 129;
   }
 

@@ -3,7 +3,7 @@ load("@prysm//tools/go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     # keep
-    srcs = select({
+    srcs = ["common.go"] + select({
         "//config:mainnet": ["mainnet.go"],
         "//config:minimal": ["minimal.go"],
     }),

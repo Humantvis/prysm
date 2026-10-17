@@ -66,6 +66,7 @@ type ReadOnlyBeaconState interface {
 	ReadOnlyConsolidations
 	ReadOnlyProposerLookahead
 	readOnlyGloasFields
+	readOnlyEip8321Fields
 	ToProtoUnsafe() any
 	ToProto() any
 	Copy() BeaconState
@@ -104,6 +105,7 @@ type WriteOnlyBeaconState interface {
 	WriteOnlyDeposits
 	WriteOnlyProposerLookahead
 	writeOnlyGloasFields
+	writeOnlyEip8321Fields
 	SetGenesisTime(val time.Time) error
 	SetGenesisValidatorsRoot(val []byte) error
 	SetSlot(val primitives.Slot) error

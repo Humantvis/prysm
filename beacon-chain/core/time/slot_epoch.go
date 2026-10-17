@@ -135,3 +135,9 @@ func CanUpgradeToHeze(slot primitives.Slot) bool {
 func CanProcessEpoch(state state.ReadOnlyBeaconState) bool {
 	return (state.Slot()+1)%params.BeaconConfig().SlotsPerEpoch == 0
 }
+
+func CanUpgradeToEip8321(slot primitives.Slot) bool {
+	epochStart := slots.IsEpochStart(slot)
+	eip8321Epoch := slots.ToEpoch(slot) == params.BeaconConfig().Eip8321ForkEpoch
+	return epochStart && eip8321Epoch
+}

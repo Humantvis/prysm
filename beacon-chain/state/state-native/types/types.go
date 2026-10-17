@@ -130,6 +130,10 @@ func (f FieldIndex) String() string {
 		return "latestBlockHash"
 	case PayloadExpectedWithdrawals:
 		return "payloadExpectedWithdrawals"
+	case RandaoCommitments:
+		return "randaoCommitments"
+	case PendingRandaoCommitments:
+		return "pendingRandaoCommitments"
 	case PTCWindow:
 		return "ptcWindow"
 	default:
@@ -231,6 +235,10 @@ func (f FieldIndex) RealPosition() int {
 		return 43
 	case PayloadExpectedWithdrawals:
 		return 44
+	case RandaoCommitments:
+		return 46
+	case PendingRandaoCommitments:
+		return 47
 	case PTCWindow:
 		return 45
 	default:
@@ -307,6 +315,8 @@ const (
 	LatestBlockHash               // Gloas: EIP-7732
 	PayloadExpectedWithdrawals    // Gloas: EIP-7732
 	PTCWindow                     // Gloas: EIP-7732
+	RandaoCommitments
+	PendingRandaoCommitments
 )
 
 // Enumerator keeps track of the number of states created since the node's start.

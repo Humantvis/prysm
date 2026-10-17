@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/OffchainLabs/go-bitfield"
+	fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
 	"github.com/OffchainLabs/prysm/v7/config/params"
 	"github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
 	"github.com/OffchainLabs/prysm/v7/encoding/bytesutil"
@@ -1816,7 +1817,7 @@ func TestSignedBeaconBlockProtoGloas(t *testing.T) {
 }
 
 func TestInitSignedBlockFromProtoGloas(t *testing.T) {
-	bits := bitfield.NewBitvector512()
+	bits := eth.NewPayloadAttestationAggregationBits()
 	bits.SetBitAt(0, true)
 	pb := &eth.SignedBeaconBlockGloas{
 		Block: &eth.BeaconBlockGloas{
@@ -2020,14 +2021,13 @@ func getFields() fields {
 		},
 		Signature: sig[:],
 	}
-	syncCommitteeBits := bitfield.NewBitvector512()
-	syncCommitteeBits.SetBitAt(1, true)
-	syncCommitteeBits.SetBitAt(2, true)
-	syncCommitteeBits.SetBitAt(8, true)
 	syncAggregate := &eth.SyncAggregate{
-		SyncCommitteeBits:      syncCommitteeBits,
+		SyncCommitteeBits:      make([]byte, fieldparams.SyncAggregateSyncCommitteeBytesLength),
 		SyncCommitteeSignature: sig[:],
 	}
+	syncAggregate.SyncCommitteeBits.SetBitAt(1, true)
+	syncAggregate.SyncCommitteeBits.SetBitAt(2, true)
+	syncAggregate.SyncCommitteeBits.SetBitAt(8, true)
 	execPayload := &enginev1.ExecutionPayload{
 		ParentHash:    root[:],
 		FeeRecipient:  b20,
