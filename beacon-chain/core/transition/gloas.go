@@ -5,6 +5,7 @@ import (
 
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/altair"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/blocks"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/eip8321"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/electra"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/epoch/precompute"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/gloas"
@@ -103,6 +104,16 @@ func gloasOperations(ctx context.Context, st state.BeaconState, block interfaces
 	if err := gloas.ProcessPayloadAttestations(ctx, st, bb); err != nil {
 		return nil, errors.Wrap(ErrProcessPayloadAttestationsFailed, err.Error())
 	}
+	// [New in EIP8321]
+	if st.Version() >= version.Eip8321 {
+		registrations, err := bb.RandaoCommitmentRegistrations()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not get randao commitment registrations")
+		}
+		if err := eip8321.ProcessRandaoCommitmentRegistrations(st, registrations); err != nil {
+			return nil, errors.Wrap(err, "could not process randao commitment registrations")
+		}
+	}
 
 	return st, nil
 }
@@ -164,6 +175,12 @@ func processEpochGloas(ctx context.Context, state state.BeaconState) error {
 	}
 	if err := electra.ProcessRegistryUpdates(ctx, state); err != nil {
 		return errors.Wrap(err, "could not process registry updates")
+	}
+	// [New in EIP8321]
+	if state.Version() >= version.Eip8321 {
+		if err := eip8321.ProcessPendingRandaoCommitments(state); err != nil {
+			return errors.Wrap(err, "could not process pending randao commitments")
+		}
 	}
 	if err := electra.ProcessSlashings(ctx, state); err != nil {
 		return err

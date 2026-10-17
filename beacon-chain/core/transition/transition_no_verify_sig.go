@@ -285,13 +285,21 @@ func ProcessBlockNoVerifyAnySig(
 		return set, nil, err
 	}
 
-	randaoReveal := signed.Block().Body().RandaoReveal()
-	rSet, err := b.RandaoSignatureBatch(ctx, st, randaoReveal[:])
+	// EIP-8321: a hash-chain reveal was already checked in ProcessBlockForStateRoot,
+	// and its randao_reveal is the G2 point at infinity, so it has no BLS signature to batch.
+	hashChainRandao, err := b.RandaoUsesHashChain(signed.Block().Body())
 	if err != nil {
-		tracing.AnnotateError(span, err)
-		return set, nil, errors.Wrap(err, "could not retrieve randao signature set")
+		return set, nil, errors.Wrap(err, "could not check randao reveal type")
 	}
-	set.RandaoSignatures = rSet
+	if !hashChainRandao {
+		randaoReveal := signed.Block().Body().RandaoReveal()
+		rSet, err := b.RandaoSignatureBatch(ctx, st, randaoReveal[:])
+		if err != nil {
+			tracing.AnnotateError(span, err)
+			return set, nil, errors.Wrap(err, "could not retrieve randao signature set")
+		}
+		set.RandaoSignatures = rSet
+	}
 	aSet, err := b.AttestationSignatureBatch(ctx, st, signed.Block().Body().Attestations())
 	if err != nil {
 		return set, nil, errors.Wrap(err, "could not retrieve attestation signature set")
@@ -490,8 +498,12 @@ func ProcessBlockForStateRoot(
 		}
 	}
 
-	randaoReveal := signed.Block().Body().RandaoReveal()
-	state, err = b.ProcessRandaoNoVerify(state, randaoReveal[:])
+	if state.Version() >= version.Eip8321 {
+		state, err = b.ProcessRandaoEip8321(ctx, state, body, false)
+	} else {
+		randaoReveal := signed.Block().Body().RandaoReveal()
+		state, err = b.ProcessRandaoNoVerify(state, randaoReveal[:])
+	}
 	if err != nil {
 		tracing.AnnotateError(span, err)
 		return nil, errors.Wrap(ErrProcessRandaoFailed, err.Error())
