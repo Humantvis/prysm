@@ -8,6 +8,7 @@ import (
 	"github.com/OffchainLabs/prysm/v7/consensus-types/blocks"
 	"github.com/OffchainLabs/prysm/v7/consensus-types/interfaces"
 	"github.com/OffchainLabs/prysm/v7/crypto/hash"
+	"github.com/OffchainLabs/prysm/v7/runtime/version"
 	"github.com/OffchainLabs/prysm/v7/time/slots"
 	"github.com/pkg/errors"
 )
@@ -36,6 +37,9 @@ func ProcessRandao(
 		return nil, err
 	}
 	body := b.Block().Body()
+	if beaconState.Version() >= version.Eip8321 {
+		return ProcessRandaoEip8321(ctx, beaconState, body, true)
+	}
 	buf, proposerPub, domain, err := randaoSigningData(ctx, beaconState)
 	if err != nil {
 		return nil, err

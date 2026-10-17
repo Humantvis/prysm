@@ -2,16 +2,29 @@ load("@prysm//tools/go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["upgrade.go"],
+    srcs = [
+        "epoch.go",
+        "hashchain.go",
+        "pending_commitments.go",
+        "randao_commitment.go",
+        "randao_hashchain.go",
+        "registration.go",
+        "upgrade.go",
+    ],
     importpath = "github.com/OffchainLabs/prysm/v7/beacon-chain/core/eip8321",
     visibility = ["//visibility:public"],
     deps = [
+        "//beacon-chain/core/signing:go_default_library",
         "//beacon-chain/core/time:go_default_library",
         "//beacon-chain/state:go_default_library",
         "//beacon-chain/state/state-native:go_default_library",
         "//config/params:go_default_library",
+        "//consensus-types/primitives:go_default_library",
+        "//crypto/bls/common:go_default_library",
         "//proto/prysm/v1alpha1:go_default_library",
         "//runtime/version:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+        "@com_lukechampine_blake3//:go_default_library",
     ],
 )
 
@@ -19,6 +32,10 @@ go_test(
     name = "go_default_test",
     srcs = [
         "deposits_test.go",
+        "hashchain_test.go",
+        "pending_commitments_test.go",
+        "randao_commitment_test.go",
+        "randao_hashchain_test.go",
         "reference_test.go",
         "upgrade_test.go",
     ],
@@ -29,6 +46,7 @@ go_test(
         "//beacon-chain/state/state-native:go_default_library",
         "//config/fieldparams:go_default_library",
         "//config/params:go_default_library",
+        "//crypto/bls/common:go_default_library",
         "//proto/prysm/v1alpha1:go_default_library",
         "//runtime/version:go_default_library",
         "//testing/require:go_default_library",
