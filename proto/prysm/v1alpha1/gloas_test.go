@@ -5,7 +5,38 @@ import (
 	"testing"
 
 	"github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
+	"google.golang.org/protobuf/proto"
 )
+
+func TestBlockRequestHashChainReveal(t *testing.T) {
+	tests := []struct {
+		name   string
+		reveal []byte
+	}{
+		{name: "legacy request"},
+		{name: "zero reveal", reveal: make([]byte, 32)},
+		{name: "hash chain reveal", reveal: append([]byte{42}, make([]byte, 31)...)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			request := &BlockRequest{Slot: 123, RandaoReveal: []byte{7}, Graffiti: []byte{8}, HashChainReveal: tt.reveal}
+			encoded, err := proto.Marshal(request)
+			if err != nil {
+				t.Fatal(err)
+			}
+			decoded := &BlockRequest{}
+			if err := proto.Unmarshal(encoded, decoded); err != nil {
+				t.Fatal(err)
+			}
+			if !proto.Equal(request, decoded) {
+				t.Fatal("block request fields changed during protobuf round trip")
+			}
+			if !reflect.DeepEqual(tt.reveal, decoded.GetHashChainReveal()) {
+				t.Fatal("hash-chain reveal was not preserved")
+			}
+		})
+	}
+}
 
 func TestExecutionPayloadBid_Copy(t *testing.T) {
 	tests := []struct {
@@ -227,4 +258,62 @@ func TestCopyBuilder(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRandaoCommitmentSSZ(t *testing.T) {
+	type sszContainer interface {
+		MarshalSSZ() ([]byte, error)
+		UnmarshalSSZ([]byte) error
+		HashTreeRoot() ([32]byte, error)
+	}
+	commitment := make([]byte, 32)
+	commitment[0] = 0x42
+	registration := &RandaoCommitmentRegistration{ValidatorIndex: 7, Commitment: commitment}
+	cases := []struct {
+		name    string
+		value   sszContainer
+		decoded sszContainer
+		size    int
+	}{
+		{"registration", registration, &RandaoCommitmentRegistration{}, 40},
+		{"signed", &SignedRandaoCommitmentRegistration{Message: registration, Signature: make([]byte, 96)}, &SignedRandaoCommitmentRegistration{}, 136},
+		{"pending", &PendingRandaoCommitment{ValidatorIndex: 7, Commitment: commitment, ActivationEpoch: 13}, &PendingRandaoCommitment{}, 48},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			encoded, err := tc.value.MarshalSSZ()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(encoded) != tc.size {
+				t.Fatalf("encoded length = %d, want %d", len(encoded), tc.size)
+			}
+			if err := tc.decoded.UnmarshalSSZ(encoded); err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(tc.value, tc.decoded) {
+				t.Fatal("SSZ round trip changed registration data")
+			}
+			root, err := tc.value.HashTreeRoot()
+			if err != nil {
+				t.Fatal(err)
+			}
+			decodedRoot, err := tc.decoded.HashTreeRoot()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if root != decodedRoot {
+				t.Fatal("SSZ round trip changed the tree root")
+			}
+			if err := tc.decoded.UnmarshalSSZ(encoded[:len(encoded)-1]); err == nil {
+				t.Fatal("accepted truncated SSZ")
+			}
+		})
+	}
+	t.Run("invalid commitment length", func(t *testing.T) {
+		invalid := &RandaoCommitmentRegistration{Commitment: make([]byte, 31)}
+		if _, err := invalid.MarshalSSZ(); err == nil {
+			t.Fatal("accepted a commitment shorter than 32 bytes")
+		}
+	})
 }

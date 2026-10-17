@@ -389,6 +389,16 @@ func ComputeFieldRootsWithHasher(ctx context.Context, state *BeaconState) ([][]b
 		}
 
 		fieldRoots[types.PTCWindow.RealPosition()] = ptcWindowRoot[:]
+		commitmentsRoot, err := state.randaoCommitmentsRoot()
+		if err != nil {
+			return nil, err
+		}
+		fieldRoots[types.RandaoCommitments.RealPosition()] = commitmentsRoot[:]
+		pendingRoot, err := ssz.MerkleizeListSSZProgressive(state.pendingRandaoCommitments)
+		if err != nil {
+			return nil, err
+		}
+		fieldRoots[types.PendingRandaoCommitments.RealPosition()] = pendingRoot[:]
 	}
 	return fieldRoots, nil
 }

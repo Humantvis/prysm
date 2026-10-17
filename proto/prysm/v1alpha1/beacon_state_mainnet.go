@@ -289,6 +289,8 @@ type BeaconStateGloas struct {
 	BuilderPendingPayments        []*BuilderPendingPayment    `ssz-size:"64"`
 	BuilderPendingWithdrawals     []*BuilderPendingWithdrawal `ssz-max:"1048576"`
 	LatestExecutionPayloadBid     *ExecutionPayloadBid
-	PayloadExpectedWithdrawals    []*enginev1.Withdrawal `ssz-max:"16"`
-	PtcWindow                     []*PTCs                `ssz-size:"96"`
+	PayloadExpectedWithdrawals    []*enginev1.Withdrawal     `ssz-max:"16"`
+	PtcWindow                     []*PTCs                    `ssz-size:"96"`
+	RandaoCommitments             [][]byte                   `ssz-size:"?,32" ssz-max:"1099511627776"`
+	PendingRandaoCommitments      []*PendingRandaoCommitment `ssz-max:"1099511627776"`
 }

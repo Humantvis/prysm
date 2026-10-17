@@ -3,6 +3,7 @@ package state_native
 import (
 	customtypes "github.com/OffchainLabs/prysm/v7/beacon-chain/state/state-native/custom-types"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/state/stateutil"
+	"github.com/OffchainLabs/prysm/v7/encoding/bytesutil"
 	ethpb "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 	"github.com/OffchainLabs/prysm/v7/runtime/version"
 	"github.com/pkg/errors"
@@ -306,6 +307,8 @@ func (b *BeaconState) ToProtoUnsafe() any {
 			LatestBlockHash:               b.latestBlockHash,
 			PayloadExpectedWithdrawals:    b.payloadExpectedWithdrawals,
 			PtcWindow:                     b.ptcWindow,
+			RandaoCommitments:             b.randaoCommitments,
+			PendingRandaoCommitments:      b.pendingRandaoCommitments,
 		}
 	default:
 		return nil
@@ -604,6 +607,8 @@ func (b *BeaconState) ToProto() any {
 			LatestBlockHash:               b.latestBlockHashVal(),
 			PayloadExpectedWithdrawals:    b.payloadExpectedWithdrawalsVal(),
 			PtcWindow:                     b.ptcWindowVal(),
+			RandaoCommitments:             bytesutil.SafeCopy2dBytes(b.randaoCommitments),
+			PendingRandaoCommitments:      ethpb.CopySlice(b.pendingRandaoCommitments),
 		}
 	default:
 		return nil

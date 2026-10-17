@@ -113,6 +113,8 @@ var (
 		types.LatestExecutionPayloadBid,
 		types.PayloadExpectedWithdrawals,
 		types.PTCWindow,
+		types.RandaoCommitments,
+		types.PendingRandaoCommitments,
 	}
 
 	gloasProgressiveSchema *ProgressiveStateSchema

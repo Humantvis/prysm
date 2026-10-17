@@ -172,8 +172,10 @@ func copyBeaconBlockBodyGloas(body *BeaconBlockBodyGloas) *BeaconBlockBodyGloas 
 	}
 
 	copied := &BeaconBlockBodyGloas{
-		RandaoReveal: bytesutil.SafeCopyBytes(body.RandaoReveal),
-		Graffiti:     bytesutil.SafeCopyBytes(body.Graffiti),
+		RandaoReveal:                  bytesutil.SafeCopyBytes(body.RandaoReveal),
+		Graffiti:                      bytesutil.SafeCopyBytes(body.Graffiti),
+		HashChainReveal:               bytesutil.SafeCopyBytes(body.HashChainReveal),
+		RandaoCommitmentRegistrations: CopySlice(body.RandaoCommitmentRegistrations),
 	}
 
 	if body.Eth1Data != nil {
@@ -327,4 +329,28 @@ func (sc *SyncCommittee) Copy() *SyncCommittee {
 		Pubkeys:         bytesutil.SafeCopy2dBytes(sc.Pubkeys),
 		AggregatePubkey: bytesutil.SafeCopyBytes(sc.AggregatePubkey),
 	}
+}
+
+// Copy creates an independent commitment registration.
+func (r *RandaoCommitmentRegistration) Copy() *RandaoCommitmentRegistration {
+	if r == nil {
+		return nil
+	}
+	return &RandaoCommitmentRegistration{ValidatorIndex: r.ValidatorIndex, Commitment: bytesutil.SafeCopyBytes(r.Commitment)}
+}
+
+// Copy creates an independent signed commitment registration.
+func (r *SignedRandaoCommitmentRegistration) Copy() *SignedRandaoCommitmentRegistration {
+	if r == nil {
+		return nil
+	}
+	return &SignedRandaoCommitmentRegistration{Message: r.Message.Copy(), Signature: bytesutil.SafeCopyBytes(r.Signature)}
+}
+
+// Copy creates an independent pending commitment.
+func (p *PendingRandaoCommitment) Copy() *PendingRandaoCommitment {
+	if p == nil {
+		return nil
+	}
+	return &PendingRandaoCommitment{ValidatorIndex: p.ValidatorIndex, Commitment: bytesutil.SafeCopyBytes(p.Commitment), ActivationEpoch: p.ActivationEpoch}
 }

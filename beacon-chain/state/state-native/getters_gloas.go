@@ -753,3 +753,38 @@ func ptcWindowOffset(stateSlot, slot primitives.Slot) (primitives.Slot, error) {
 	offset := slotsPerEpoch.Mul(uint64(epoch-stateEpoch+1)) + (slot % slotsPerEpoch)
 	return offset, nil
 }
+
+// RandaoCommitmentAtIndex returns the validator's current hash-chain tip.
+func (b *BeaconState) RandaoCommitmentAtIndex(index primitives.ValidatorIndex) ([32]byte, error) {
+	if b.version < version.Gloas {
+		return [32]byte{}, errNotSupported("RandaoCommitmentAtIndex", b.version)
+	}
+	b.lock.RLock()
+	defer b.lock.RUnlock()
+	if uint64(index) >= uint64(len(b.randaoCommitments)) {
+		return [32]byte{}, fmt.Errorf("randao commitment index %d out of range", index)
+	}
+	var result [32]byte
+	copy(result[:], b.randaoCommitments[index])
+	return result, nil
+}
+
+// RandaoCommitments returns an independent commitment registry.
+func (b *BeaconState) RandaoCommitments() ([][]byte, error) {
+	if b.version < version.Gloas {
+		return nil, errNotSupported("RandaoCommitments", b.version)
+	}
+	b.lock.RLock()
+	defer b.lock.RUnlock()
+	return b.randaoCommitmentsVal(), nil
+}
+
+// PendingRandaoCommitments returns independent pending registrations.
+func (b *BeaconState) PendingRandaoCommitments() ([]*ethpb.PendingRandaoCommitment, error) {
+	if b.version < version.Gloas {
+		return nil, errNotSupported("PendingRandaoCommitments", b.version)
+	}
+	b.lock.RLock()
+	defer b.lock.RUnlock()
+	return ethpb.CopySlice(b.pendingRandaoCommitments), nil
+}

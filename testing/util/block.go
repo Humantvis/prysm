@@ -1509,6 +1509,9 @@ func HydrateBeaconBlockBodyGloas(b *ethpb.BeaconBlockBodyGloas) *ethpb.BeaconBlo
 	if b == nil {
 		b = &ethpb.BeaconBlockBodyGloas{}
 	}
+	if b.HashChainReveal == nil {
+		b.HashChainReveal = make([]byte, 32)
+	}
 	if b.RandaoReveal == nil {
 		b.RandaoReveal = make([]byte, fieldparams.BLSSignatureLength)
 	}

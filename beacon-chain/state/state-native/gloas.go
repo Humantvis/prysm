@@ -1,6 +1,12 @@
 package state_native
 
 import (
+	"encoding/binary"
+	"fmt"
+
+	fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
+	"github.com/OffchainLabs/prysm/v7/encoding/bytesutil"
+	"github.com/OffchainLabs/prysm/v7/encoding/ssz"
 	enginev1 "github.com/OffchainLabs/prysm/v7/proto/engine/v1"
 	ethpb "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 )
@@ -96,4 +102,25 @@ func (b *BeaconState) payloadExpectedWithdrawalsVal() []*enginev1.Withdrawal {
 // This assumes that a lock is already held on BeaconState.
 func (b *BeaconState) ptcWindowVal() []*ethpb.PTCs {
 	return ethpb.CopyPTCWindow(b.ptcWindow)
+}
+
+func (b *BeaconState) randaoCommitmentsVal() [][]byte {
+	return bytesutil.SafeCopy2dBytes(b.randaoCommitments)
+}
+
+func (b *BeaconState) randaoCommitmentsRoot() ([32]byte, error) {
+	if uint64(len(b.randaoCommitments)) > fieldparams.ValidatorRegistryLimit {
+		return [32]byte{}, fmt.Errorf("too many randao commitments")
+	}
+	roots := make([][32]byte, len(b.randaoCommitments))
+	for i, commitment := range b.randaoCommitments {
+		if len(commitment) != 32 {
+			return [32]byte{}, fmt.Errorf("randao commitment %d must be 32 bytes", i)
+		}
+		copy(roots[i][:], commitment)
+	}
+	root := ssz.MerkleizeVector(roots, fieldparams.ValidatorRegistryLimit)
+	var length [32]byte
+	binary.LittleEndian.PutUint64(length[:], uint64(len(b.randaoCommitments)))
+	return ssz.MixInLength(root, length[:]), nil
 }

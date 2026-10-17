@@ -422,20 +422,30 @@ func TestBeaconStateGloas_FieldParity(t *testing.T) {
 		"LatestExecutionPayloadBid *eth.ExecutionPayloadBid",
 		"PayloadExpectedWithdrawals []*enginev1.Withdrawal ssz-max",
 		"PtcWindow []*eth.PTCs ssz-size",
+		"RandaoCommitments [][]uint8 ssz-size ssz-max",
+		"PendingRandaoCommitments []*eth.PendingRandaoCommitment ssz-max",
 	})
 }
 
 func TestBeaconStateGloas_Copy(t *testing.T) {
 	orig := &v1alpha1.BeaconStateGloas{Builders: []*v1alpha1.Builder{{Pubkey: []byte{1}}}, ExecutionPayloadAvailability: []byte{2}, PtcWindow: []*v1alpha1.PTCs{{ValidatorIndices: []primitives.ValidatorIndex{3}}}, LatestExecutionPayloadBid: &v1alpha1.ExecutionPayloadBid{BuilderIndex: 4, ParentBlockHash: []byte{5}}}
+	orig.RandaoCommitments = [][]byte{{10}}
+	orig.PendingRandaoCommitments = []*v1alpha1.PendingRandaoCommitment{{ValidatorIndex: 1, Commitment: []byte{11}, ActivationEpoch: 3}}
 	cp := orig.Copy()
 	require.DeepSSZEqual(t, orig, cp)
 	cp.Builders[0].Pubkey[0] = 6
 	cp.ExecutionPayloadAvailability[0] = 7
 	cp.PtcWindow[0].ValidatorIndices[0] = 8
 	cp.LatestExecutionPayloadBid.ParentBlockHash[0] = 9
+	cp.RandaoCommitments[0][0] = 12
+	cp.PendingRandaoCommitments[0].Commitment[0] = 13
+	cp.PendingRandaoCommitments[0].ActivationEpoch = 4
 	require.Equal(t, byte(1), orig.Builders[0].Pubkey[0])
 	require.Equal(t, byte(2), orig.ExecutionPayloadAvailability[0])
 	require.Equal(t, primitives.ValidatorIndex(3), orig.PtcWindow[0].ValidatorIndices[0])
 	require.Equal(t, byte(5), orig.LatestExecutionPayloadBid.ParentBlockHash[0])
+	require.Equal(t, byte(10), orig.RandaoCommitments[0][0])
+	require.Equal(t, byte(11), orig.PendingRandaoCommitments[0].Commitment[0])
+	require.Equal(t, primitives.Epoch(3), orig.PendingRandaoCommitments[0].ActivationEpoch)
 	require.Equal(t, (*v1alpha1.BeaconStateGloas)(nil), (*v1alpha1.BeaconStateGloas)(nil).Copy())
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/OffchainLabs/go-bitfield"
+	fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
 	"github.com/OffchainLabs/prysm/v7/config/params"
 	"github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
 	"github.com/OffchainLabs/prysm/v7/encoding/bytesutil"
@@ -1816,7 +1817,7 @@ func TestSignedBeaconBlockProtoGloas(t *testing.T) {
 }
 
 func TestInitSignedBlockFromProtoGloas(t *testing.T) {
-	bits := bitfield.NewBitvector512()
+	bits := (&eth.PayloadAttestation{AggregationBits: make([]byte, fieldparams.PTCSize/8)}).AggregationBits
 	bits.SetBitAt(0, true)
 	pb := &eth.SignedBeaconBlockGloas{
 		Block: &eth.BeaconBlockGloas{
@@ -2016,7 +2017,7 @@ func getFields() fields {
 		},
 		Signature: sig[:],
 	}
-	syncCommitteeBits := bitfield.NewBitvector512()
+	syncCommitteeBits := (&eth.SyncAggregate{SyncCommitteeBits: make([]byte, fieldparams.SyncAggregateSyncCommitteeBytesLength)}).SyncCommitteeBits
 	syncCommitteeBits.SetBitAt(1, true)
 	syncCommitteeBits.SetBitAt(2, true)
 	syncCommitteeBits.SetBitAt(8, true)
@@ -2209,5 +2210,62 @@ func getFields() fields {
 		blsToExecutionChanges:    blsToExecutionChanges,
 		kzgCommitments:           kzgCommitments,
 		execRequests:             execRequests,
+	}
+}
+
+func TestGloasRandaoFields(t *testing.T) {
+	reveal := make([]byte, 32)
+	reveal[0] = 42
+	registrations := []*eth.SignedRandaoCommitmentRegistration{{Message: &eth.RandaoCommitmentRegistration{ValidatorIndex: 7, Commitment: make([]byte, 32)}, Signature: make([]byte, 96)}}
+	sb, err := initSignedBlockFromProtoGloas(&eth.SignedBeaconBlockGloas{Block: &eth.BeaconBlockGloas{Body: &eth.BeaconBlockBodyGloas{HashChainReveal: reveal, RandaoCommitmentRegistrations: registrations}}})
+	require.NoError(t, err)
+	got, err := sb.Block().Body().HashChainReveal()
+	require.NoError(t, err)
+	require.Equal(t, byte(42), got[0])
+	gotRegistrations, err := sb.Block().Body().RandaoCommitmentRegistrations()
+	require.NoError(t, err)
+	require.DeepEqual(t, registrations, gotRegistrations)
+	converted, err := sb.Proto()
+	require.NoError(t, err)
+	require.DeepEqual(t, reveal, converted.(*eth.SignedBeaconBlockGloas).Block.Body.HashChainReveal)
+	require.DeepEqual(t, registrations, converted.(*eth.SignedBeaconBlockGloas).Block.Body.RandaoCommitmentRegistrations)
+	copied, err := sb.Copy()
+	require.NoError(t, err)
+	copiedRegistrations, err := copied.Block().Body().RandaoCommitmentRegistrations()
+	require.NoError(t, err)
+	copiedRegistrations[0].Message.Commitment[0] = 99
+	copiedRegistrations[0].Signature[0] = 99
+	require.Equal(t, byte(0), registrations[0].Message.Commitment[0])
+	require.Equal(t, byte(0), registrations[0].Signature[0])
+	reveal[0] = 43
+	require.NoError(t, sb.SetHashChainReveal(reveal))
+	reveal[0] = 44
+	updated, err := sb.Block().Body().HashChainReveal()
+	require.NoError(t, err)
+	require.Equal(t, byte(43), updated[0])
+	if err := sb.SetHashChainReveal(make([]byte, 31)); err == nil {
+		t.Fatal("accepted a short reveal")
+	}
+	require.NoError(t, sb.SetRandaoCommitmentRegistrations(nil))
+	cleared, err := sb.Block().Body().RandaoCommitmentRegistrations()
+	require.NoError(t, err)
+	require.Equal(t, 0, len(cleared))
+	for _, fork := range []int{version.Phase0, version.Altair, version.Bellatrix, version.Capella, version.Deneb, version.Electra, version.Fulu} {
+		legacy := &SignedBeaconBlock{version: fork, block: &BeaconBlock{body: &BeaconBlockBody{version: fork}}}
+		if _, err := legacy.Block().Body().HashChainReveal(); err == nil {
+			t.Fatalf("fork %d accepted reveal getter", fork)
+		}
+		if _, err := legacy.Block().Body().RandaoCommitmentRegistrations(); err == nil {
+			t.Fatalf("fork %d accepted registrations getter", fork)
+		}
+		if err := legacy.SetHashChainReveal(make([]byte, 32)); err == nil {
+			t.Fatalf("fork %d accepted reveal setter", fork)
+		}
+		if err := legacy.SetRandaoCommitmentRegistrations(nil); err == nil {
+			t.Fatalf("fork %d accepted registrations setter", fork)
+		}
+	}
+	if _, err := initBlockBodyFromProtoGloas(&eth.BeaconBlockBodyGloas{HashChainReveal: make([]byte, 33)}); err == nil {
+		t.Fatal("accepted an oversized proto reveal")
 	}
 }

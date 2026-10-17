@@ -12,6 +12,11 @@ type writeOnlyGloasFields interface {
 	// Bids.
 	SetExecutionPayloadBid(h interfaces.ROExecutionPayloadBid) error
 	SetPTCWindow([]*ethpb.PTCs) error
+	SetRandaoCommitments([][]byte) error
+	UpdateRandaoCommitmentAtIndex(primitives.ValidatorIndex, [32]byte) error
+	AppendRandaoCommitment([32]byte) error
+	SetPendingRandaoCommitments([]*ethpb.PendingRandaoCommitment) error
+	AppendPendingRandaoCommitment(*ethpb.PendingRandaoCommitment) error
 	RotatePTCWindow([]*ethpb.PTCs) error
 
 	// Builder pending payments / withdrawals.
@@ -52,6 +57,9 @@ type readOnlyGloasFields interface {
 	// Bids.
 	LatestExecutionPayloadBid() (interfaces.ROExecutionPayloadBid, error)
 	PTCWindow() ([]*ethpb.PTCs, error)
+	RandaoCommitmentAtIndex(primitives.ValidatorIndex) ([32]byte, error)
+	RandaoCommitments() ([][]byte, error)
+	PendingRandaoCommitments() ([]*ethpb.PendingRandaoCommitment, error)
 	PayloadCommitteeReadOnly(slot primitives.Slot) ([]primitives.ValidatorIndex, error)
 
 	// Builder pending payments / withdrawals.

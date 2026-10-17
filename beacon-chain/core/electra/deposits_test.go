@@ -668,3 +668,16 @@ func TestApplyPendingDeposit_InvalidSignature(t *testing.T) {
 	// no topup either
 	require.Equal(t, 0, len(st.Balances()))
 }
+
+func TestAddValidatorRandaoCommitment(t *testing.T) {
+	st, _ := util.DeterministicGenesisStateGloas(t, 64)
+	before := st.NumValidators()
+	pubkey := make([]byte, fieldparams.BLSPubkeyLength)
+	pubkey[0] = 123
+	require.NoError(t, electra.AddValidatorToRegistry(st, pubkey, make([]byte, 32), params.BeaconConfig().MinActivationBalance))
+	commitments, err := st.RandaoCommitments()
+	require.NoError(t, err)
+	require.Equal(t, before+1, len(commitments))
+	require.Equal(t, st.NumValidators(), len(commitments))
+	require.DeepEqual(t, make([]byte, 32), commitments[before])
+}

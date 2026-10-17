@@ -950,3 +950,88 @@ func (b *BeaconState) RotatePTCWindow(newEpochSlots []*ethpb.PTCs) error {
 func expectedPTCWindowSize() primitives.Slot {
 	return params.BeaconConfig().SlotsPerEpoch.Mul(uint64(2 + params.BeaconConfig().MinSeedLookahead))
 }
+
+// SetRandaoCommitments replaces the commitment registry with a copied slice.
+func (b *BeaconState) SetRandaoCommitments(commitments [][]byte) error {
+	if b.version < version.Gloas {
+		return errNotSupported("SetRandaoCommitments", b.version)
+	}
+	if uint64(len(commitments)) > fieldparams.ValidatorRegistryLimit {
+		return fmt.Errorf("too many randao commitments")
+	}
+	for _, commitment := range commitments {
+		if len(commitment) != 32 {
+			return fmt.Errorf("randao commitment must be 32 bytes")
+		}
+	}
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	if len(commitments) != b.validatorsLen() {
+		return fmt.Errorf("randao commitments length does not match validators")
+	}
+	b.randaoCommitments = bytesutil.SafeCopy2dBytes(commitments)
+	b.markFieldAsDirty(types.RandaoCommitments)
+	return nil
+}
+
+// UpdateRandaoCommitmentAtIndex replaces one validator's hash-chain tip.
+func (b *BeaconState) UpdateRandaoCommitmentAtIndex(index primitives.ValidatorIndex, commitment [32]byte) error {
+	if b.version < version.Gloas {
+		return errNotSupported("UpdateRandaoCommitmentAtIndex", b.version)
+	}
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	if uint64(index) >= uint64(len(b.randaoCommitments)) {
+		return fmt.Errorf("randao commitment index %d out of range", index)
+	}
+	b.randaoCommitments[index] = bytesutil.SafeCopyBytes(commitment[:])
+	b.markFieldAsDirty(types.RandaoCommitments)
+	return nil
+}
+
+// AppendRandaoCommitment adds a commitment for a newly registered validator.
+func (b *BeaconState) AppendRandaoCommitment(commitment [32]byte) error {
+	if b.version < version.Gloas {
+		return errNotSupported("AppendRandaoCommitment", b.version)
+	}
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	if uint64(len(b.randaoCommitments)) >= fieldparams.ValidatorRegistryLimit {
+		return fmt.Errorf("too many randao commitments")
+	}
+	b.randaoCommitments = append(b.randaoCommitments, bytesutil.SafeCopyBytes(commitment[:]))
+	b.markFieldAsDirty(types.RandaoCommitments)
+	return nil
+}
+
+// SetPendingRandaoCommitments replaces the pending queue with independent entries.
+func (b *BeaconState) SetPendingRandaoCommitments(pending []*ethpb.PendingRandaoCommitment) error {
+	if b.version < version.Gloas {
+		return errNotSupported("SetPendingRandaoCommitments", b.version)
+	}
+	for _, entry := range pending {
+		if entry == nil || len(entry.Commitment) != 32 {
+			return fmt.Errorf("invalid pending randao commitment")
+		}
+	}
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	b.pendingRandaoCommitments = ethpb.CopySlice(pending)
+	b.markFieldAsDirty(types.PendingRandaoCommitments)
+	return nil
+}
+
+// AppendPendingRandaoCommitment appends an independent pending registration.
+func (b *BeaconState) AppendPendingRandaoCommitment(pending *ethpb.PendingRandaoCommitment) error {
+	if b.version < version.Gloas {
+		return errNotSupported("AppendPendingRandaoCommitment", b.version)
+	}
+	if pending == nil || len(pending.Commitment) != 32 {
+		return fmt.Errorf("invalid pending randao commitment")
+	}
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	b.pendingRandaoCommitments = append(b.pendingRandaoCommitments, pending.Copy())
+	b.markFieldAsDirty(types.PendingRandaoCommitments)
+	return nil
+}

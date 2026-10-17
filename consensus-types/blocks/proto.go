@@ -699,19 +699,21 @@ func (b *BeaconBlockBody) Proto() (proto.Message, error) {
 		}, nil
 	case version.Gloas:
 		return &eth.BeaconBlockBodyGloas{
-			RandaoReveal:              b.randaoReveal[:],
-			Eth1Data:                  b.eth1Data,
-			Graffiti:                  b.graffiti[:],
-			ProposerSlashings:         b.proposerSlashings,
-			AttesterSlashings:         b.attesterSlashingsGloas,
-			Attestations:              b.attestationsGloas,
-			Deposits:                  b.deposits,
-			VoluntaryExits:            b.voluntaryExits,
-			SyncAggregate:             b.syncAggregate,
-			BlsToExecutionChanges:     b.blsToExecutionChanges,
-			SignedExecutionPayloadBid: b.signedExecutionPayloadBid,
-			PayloadAttestations:       b.payloadAttestations,
-			ParentExecutionRequests:   b.parentExecutionRequests,
+			RandaoReveal:                  b.randaoReveal[:],
+			Eth1Data:                      b.eth1Data,
+			Graffiti:                      b.graffiti[:],
+			ProposerSlashings:             b.proposerSlashings,
+			AttesterSlashings:             b.attesterSlashingsGloas,
+			Attestations:                  b.attestationsGloas,
+			Deposits:                      b.deposits,
+			VoluntaryExits:                b.voluntaryExits,
+			SyncAggregate:                 b.syncAggregate,
+			BlsToExecutionChanges:         b.blsToExecutionChanges,
+			SignedExecutionPayloadBid:     b.signedExecutionPayloadBid,
+			PayloadAttestations:           b.payloadAttestations,
+			ParentExecutionRequests:       b.parentExecutionRequests,
+			HashChainReveal:               b.hashChainReveal[:],
+			RandaoCommitmentRegistrations: b.randaoCommitmentRegistrations,
 		}, nil
 	default:
 		return nil, errors.New("unsupported beacon block body version")
@@ -1568,26 +1570,31 @@ func initBlockBodyFromProtoGloas(pb *eth.BeaconBlockBodyGloas) (*BeaconBlockBody
 	if pb == nil {
 		return nil, errNilBlockBody
 	}
+	if len(pb.HashChainReveal) != 0 && len(pb.HashChainReveal) != 32 {
+		return nil, errors.New("hash chain reveal must be 32 bytes")
+	}
 
 	per := pb.ParentExecutionRequests
 	if per == nil {
 		per = &enginev1.ExecutionRequestsGloas{}
 	}
 	b := &BeaconBlockBody{
-		version:                   version.Gloas,
-		randaoReveal:              bytesutil.ToBytes96(pb.RandaoReveal),
-		eth1Data:                  pb.Eth1Data,
-		graffiti:                  bytesutil.ToBytes32(pb.Graffiti),
-		proposerSlashings:         pb.ProposerSlashings,
-		attesterSlashingsGloas:    pb.AttesterSlashings,
-		attestationsGloas:         pb.Attestations,
-		deposits:                  pb.Deposits,
-		voluntaryExits:            pb.VoluntaryExits,
-		syncAggregate:             pb.SyncAggregate,
-		blsToExecutionChanges:     pb.BlsToExecutionChanges,
-		signedExecutionPayloadBid: pb.SignedExecutionPayloadBid,
-		payloadAttestations:       pb.PayloadAttestations,
-		parentExecutionRequests:   per,
+		version:                       version.Gloas,
+		randaoReveal:                  bytesutil.ToBytes96(pb.RandaoReveal),
+		eth1Data:                      pb.Eth1Data,
+		graffiti:                      bytesutil.ToBytes32(pb.Graffiti),
+		proposerSlashings:             pb.ProposerSlashings,
+		attesterSlashingsGloas:        pb.AttesterSlashings,
+		attestationsGloas:             pb.Attestations,
+		deposits:                      pb.Deposits,
+		voluntaryExits:                pb.VoluntaryExits,
+		syncAggregate:                 pb.SyncAggregate,
+		blsToExecutionChanges:         pb.BlsToExecutionChanges,
+		signedExecutionPayloadBid:     pb.SignedExecutionPayloadBid,
+		payloadAttestations:           pb.PayloadAttestations,
+		parentExecutionRequests:       per,
+		hashChainReveal:               bytesutil.ToBytes32(pb.HashChainReveal),
+		randaoCommitmentRegistrations: pb.RandaoCommitmentRegistrations,
 	}
 	return b, nil
 }

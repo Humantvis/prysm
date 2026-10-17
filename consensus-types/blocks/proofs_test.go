@@ -153,6 +153,8 @@ func TestComputeBlockBodyFieldRoots_Electra(t *testing.T) {
 
 func TestComputeBlockBodyFieldRoots_Gloas_ProgressiveSSZGate(t *testing.T) {
 	blockBodyGloas := hydrateBeaconBlockBodyGloas()
+	blockBodyGloas.HashChainReveal[0] = 42
+	blockBodyGloas.RandaoCommitmentRegistrations = []*eth.SignedRandaoCommitmentRegistration{{Message: &eth.RandaoCommitmentRegistration{Commitment: make([]byte, 32)}, Signature: make([]byte, 96)}}
 	i, err := NewBeaconBlockBody(blockBodyGloas)
 	require.NoError(t, err)
 
@@ -161,7 +163,7 @@ func TestComputeBlockBodyFieldRoots_Gloas_ProgressiveSSZGate(t *testing.T) {
 
 	roots, err := ComputeBlockBodyFieldRoots(t.Context(), b)
 	require.NoError(t, err)
-	require.Equal(t, 13, len(roots))
+	require.Equal(t, 15, len(roots))
 
 	payloadAttestations, err := b.PayloadAttestations()
 	require.NoError(t, err)
@@ -172,7 +174,7 @@ func TestComputeBlockBodyFieldRoots_Gloas_ProgressiveSSZGate(t *testing.T) {
 	bounded, err := ssz.MerkleizeListSSZ(payloadAttestations, fieldparams.MaxPayloadAttestations)
 	require.NoError(t, err)
 	require.DeepNotSSZEqual(t, bounded[:], roots[11])
-	require.Equal(t, 13, len(roots))
+	require.Equal(t, 15, len(roots))
 
 	rootChunks := make([][32]byte, len(roots))
 	activeFields := make([]bool, len(roots))
@@ -226,7 +228,7 @@ func TestProgressiveContainerActiveFields(t *testing.T) {
 		{
 			name:      "beacon block body",
 			container: beaconBlockBodyProgressiveContainer,
-			want:      [32]byte{0xff, 0x1f},
+			want:      [32]byte{0xff, 0x7f},
 		},
 	}
 	for _, test := range tests {

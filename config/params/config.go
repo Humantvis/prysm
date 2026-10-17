@@ -167,6 +167,11 @@ type BeaconChainConfig struct {
 	DomainBuilderRequestAuth          [4]byte `yaml:"DOMAIN_BUILDER_REQUEST_AUTH" spec:"true"`           // DomainBuilderRequestAuth defines the BLS signature domain for builder bid request authentication.
 	DomainBuilderDeposit              [4]byte `yaml:"DOMAIN_BUILDER_DEPOSIT" spec:"true"`                // DomainBuilderDeposit defines the BLS signature domain for builder deposit requests (EIP-8282).
 
+	// Hash-chain RANDAO (EIP-8321).
+	DomainRandaoCommitmentRegistration [4]byte          `yaml:"DOMAIN_RANDAO_COMMITMENT_REGISTRATION"` // BLS domain for one-time commitment registrations.
+	CommitmentRegistrationDelay        primitives.Epoch `yaml:"COMMITMENT_REGISTRATION_DELAY"`         // Activation delay; must be at least MinSeedLookahead + 2.
+	MaxRandaoCommitmentRegistrations   uint64           `yaml:"MAX_RANDAO_COMMITMENT_REGISTRATIONS"`   // Maximum commitment registrations per block.
+
 	// Prysm constants.
 	GenesisValidatorsRoot          [32]byte        // GenesisValidatorsRoot is the root hash of the genesis validators.
 	GweiPerEth                     uint64          // GweiPerEth is the amount of gwei corresponding to 1 eth.

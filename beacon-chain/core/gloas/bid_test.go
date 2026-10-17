@@ -747,3 +747,8 @@ func TestProcessExecutionPayloadBid_PrevRandaoMismatch(t *testing.T) {
 	err = ProcessExecutionPayloadBid(state, block)
 	require.ErrorContains(t, "prev randao mismatch", err)
 }
+
+func (s stubBlockBody) HashChainReveal() ([32]byte, error) { return [32]byte{}, nil }
+func (s stubBlockBody) RandaoCommitmentRegistrations() ([]*ethpb.SignedRandaoCommitmentRegistration, error) {
+	return nil, nil
+}

@@ -185,6 +185,34 @@ message BeaconBlockGloas {
   BeaconBlockBodyGloas body = 5;
 }
 
+// RandaoCommitmentRegistration registers a validator's initial hash-chain tip.
+message RandaoCommitmentRegistration {
+  uint64 validator_index = 1 [
+    (ethereum.eth.ext.cast_type) =
+        "github.com/OffchainLabs/prysm/v7/consensus-types/primitives.ValidatorIndex"
+  ];
+  bytes commitment = 2 [ (ethereum.eth.ext.ssz_size) = "32" ];
+}
+
+// SignedRandaoCommitmentRegistration authorizes a one-time registration.
+message SignedRandaoCommitmentRegistration {
+  RandaoCommitmentRegistration message = 1;
+  bytes signature = 2 [ (ethereum.eth.ext.ssz_size) = "96" ];
+}
+
+// PendingRandaoCommitment stores a registration awaiting activation.
+message PendingRandaoCommitment {
+  uint64 validator_index = 1 [
+    (ethereum.eth.ext.cast_type) =
+        "github.com/OffchainLabs/prysm/v7/consensus-types/primitives.ValidatorIndex"
+  ];
+  bytes commitment = 2 [ (ethereum.eth.ext.ssz_size) = "32" ];
+  uint64 activation_epoch = 3 [
+    (ethereum.eth.ext.cast_type) =
+        "github.com/OffchainLabs/prysm/v7/consensus-types/primitives.Epoch"
+  ];
+}
+
 // BeaconBlockBodyGloas represents the body of a beacon block in the Gloas fork.
 // New fields: signed_execution_payload_bid, payload_attestations, parent_execution_requests
 // Removed fields: execution_payload, blob_kzg_commitments, execution_requests
@@ -226,6 +254,9 @@ message BeaconBlockBodyGloas {
   repeated PayloadAttestation payload_attestations = 12
       [ (ethereum.eth.ext.ssz_max) = "payload_attestation.size" ];
   ethereum.engine.v1.ExecutionRequestsGloas parent_execution_requests = 13;
+  bytes hash_chain_reveal = 14 [ (ethereum.eth.ext.ssz_size) = "32" ];
+  repeated SignedRandaoCommitmentRegistration randao_commitment_registrations = 15
+      [ (ethereum.eth.ext.ssz_max) = "128" ];
 }
 
 // SignedBeaconBlockGloas represents a signed beacon block in the Gloas fork.

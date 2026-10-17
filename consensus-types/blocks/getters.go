@@ -1384,3 +1384,19 @@ func (b *BeaconBlockBody) HashTreeRoot() ([field_params.RootLength]byte, error) 
 func (b *BeaconBlockBody) IsBlinded() bool {
 	return b.version < version.Gloas && b.version >= version.Bellatrix && b.executionPayload == nil
 }
+
+// HashChainReveal returns the Gloas hash-chain preimage.
+func (b *BeaconBlockBody) HashChainReveal() ([32]byte, error) {
+	if b.version < version.Gloas {
+		return [32]byte{}, consensus_types.ErrNotSupported("HashChainReveal", b.version)
+	}
+	return b.hashChainReveal, nil
+}
+
+// RandaoCommitmentRegistrations returns the block's commitment registrations.
+func (b *BeaconBlockBody) RandaoCommitmentRegistrations() ([]*eth.SignedRandaoCommitmentRegistration, error) {
+	if b.version < version.Gloas {
+		return nil, consensus_types.ErrNotSupported("RandaoCommitmentRegistrations", b.version)
+	}
+	return b.randaoCommitmentRegistrations, nil
+}

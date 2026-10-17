@@ -229,3 +229,24 @@ func (b *SignedBeaconBlock) SetSignedExecutionPayloadBid(header *eth.SignedExecu
 	b.block.body.signedExecutionPayloadBid = header
 	return nil
 }
+
+// SetHashChainReveal sets the Gloas hash-chain preimage.
+func (b *SignedBeaconBlock) SetHashChainReveal(reveal []byte) error {
+	if b.version < version.Gloas {
+		return consensus_types.ErrNotSupported("SetHashChainReveal", b.version)
+	}
+	if len(reveal) != 32 {
+		return fmt.Errorf("hash chain reveal must be 32 bytes, got %d", len(reveal))
+	}
+	copy(b.block.body.hashChainReveal[:], reveal)
+	return nil
+}
+
+// SetRandaoCommitmentRegistrations sets the block's commitment registrations.
+func (b *SignedBeaconBlock) SetRandaoCommitmentRegistrations(registrations []*eth.SignedRandaoCommitmentRegistration) error {
+	if b.version < version.Gloas {
+		return consensus_types.ErrNotSupported("SetRandaoCommitmentRegistrations", b.version)
+	}
+	b.block.body.randaoCommitmentRegistrations = registrations
+	return nil
+}

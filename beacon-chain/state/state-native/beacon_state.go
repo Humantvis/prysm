@@ -82,6 +82,8 @@ type BeaconState struct {
 	latestBlockHash              []byte
 	payloadExpectedWithdrawals   []*enginev1.Withdrawal
 	ptcWindow                    []*ethpb.PTCs
+	randaoCommitments            [][]byte
+	pendingRandaoCommitments     []*ethpb.PendingRandaoCommitment
 
 	id                    uint64
 	lock                  sync.RWMutex
@@ -148,6 +150,8 @@ type beaconStateMarshalable struct {
 	LatestBlockHash                     []byte                                  `json:"latest_block_hash" yaml:"latest_block_hash"`
 	PayloadExpectedWithdrawals          []*enginev1.Withdrawal                  `json:"payload_expected_withdrawals" yaml:"payload_expected_withdrawals"`
 	PtcWindow                           []*ethpb.PTCs                           `json:"ptc_window" yaml:"ptc_window"`
+	RandaoCommitments                   [][]byte                                `json:"randao_commitments" yaml:"randao_commitments"`
+	PendingRandaoCommitments            []*ethpb.PendingRandaoCommitment        `json:"pending_randao_commitments" yaml:"pending_randao_commitments"`
 }
 
 func (b *BeaconState) MarshalJSON() ([]byte, error) {
@@ -211,6 +215,8 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		LatestBlockHash:                     b.latestBlockHash,
 		PayloadExpectedWithdrawals:          b.payloadExpectedWithdrawals,
 		PtcWindow:                           b.ptcWindow,
+		RandaoCommitments:                   b.randaoCommitments,
+		PendingRandaoCommitments:            b.pendingRandaoCommitments,
 	}
 	return json.Marshal(marshalable)
 }

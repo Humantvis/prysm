@@ -1,5 +1,8 @@
 package: "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 types:
+  - name: "RandaoCommitmentRegistration"
+  - name: "SignedRandaoCommitmentRegistration"
+  - name: "PendingRandaoCommitment"
   - name: "LightClientHeaderGloas"
   - name: "LightClientBootstrapGloas"
   - name: "LightClientUpdateGloas"
@@ -38,6 +41,7 @@ types:
       Builders:                   {type: "ProgressiveList"}
       BuilderPendingWithdrawals:  {type: "ProgressiveList"}
       PayloadExpectedWithdrawals: {type: "ProgressiveList"}
+      PendingRandaoCommitments: {type: "ProgressiveList"}
   - name: "BlindedExecutionPayloadEnvelope"
   - name: "Builder"
   - name: "BuilderPendingPayment"

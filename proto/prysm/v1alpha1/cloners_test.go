@@ -9,6 +9,7 @@ import (
 	enginev1 "github.com/OffchainLabs/prysm/v7/proto/engine/v1"
 	v1alpha1 "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 	"github.com/OffchainLabs/prysm/v7/testing/assert"
+	"github.com/OffchainLabs/prysm/v7/testing/util"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -1382,4 +1383,56 @@ func TestCopySlice_NilStaysNil(t *testing.T) {
 	var nilForks []*v1alpha1.Fork
 	assert.Equal(t, true, v1alpha1.CopySlice(nilForks) == nil)
 	assert.Equal(t, 0, len(v1alpha1.CopySlice([]*v1alpha1.Fork{})))
+}
+
+func TestGloasRandaoBlockSSZ(t *testing.T) {
+	block := util.HydrateSignedBeaconBlockGloas(&v1alpha1.SignedBeaconBlockGloas{})
+	body := block.Block.Body
+	body.HashChainReveal[0] = 17
+	registration := &v1alpha1.SignedRandaoCommitmentRegistration{Message: &v1alpha1.RandaoCommitmentRegistration{ValidatorIndex: 9, Commitment: make([]byte, 32)}, Signature: make([]byte, 96)}
+	body.RandaoCommitmentRegistrations = []*v1alpha1.SignedRandaoCommitmentRegistration{registration}
+	encoded, err := body.MarshalSSZ()
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoded := &v1alpha1.BeaconBlockBodyGloas{}
+	if err := decoded.UnmarshalSSZ(encoded); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(body.HashChainReveal, decoded.HashChainReveal) || !proto.Equal(registration, decoded.RandaoCommitmentRegistrations[0]) {
+		t.Fatal("SSZ dropped RANDAO fields")
+	}
+	originalRoot, err := body.HashTreeRoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	decodedRoot, err := decoded.HashTreeRoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if originalRoot != decodedRoot {
+		t.Fatal("SSZ changed the block body root")
+	}
+	body.HashChainReveal[0]++
+	changedRoot, err := body.HashTreeRoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if changedRoot == originalRoot {
+		t.Fatal("reveal was not included in block body root")
+	}
+	body.RandaoCommitmentRegistrations = make([]*v1alpha1.SignedRandaoCommitmentRegistration, 128)
+	for i := range body.RandaoCommitmentRegistrations {
+		body.RandaoCommitmentRegistrations[i] = registration
+	}
+	if _, err := body.MarshalSSZ(); err != nil {
+		t.Fatalf("128 registrations rejected: %v", err)
+	}
+	body.RandaoCommitmentRegistrations = append(body.RandaoCommitmentRegistrations, registration)
+	if _, err := body.MarshalSSZ(); err == nil {
+		t.Fatal("129 registrations accepted")
+	}
+	if _, err := body.HashTreeRoot(); err == nil {
+		t.Fatal("129 registrations accepted in tree root")
+	}
 }

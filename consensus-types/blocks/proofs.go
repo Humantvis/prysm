@@ -24,7 +24,7 @@ const (
 	signedExecutionPayloadBidFieldIndex = 10
 	parentBlockHashFieldIndex           = 0
 	executionPayloadBidFieldCount       = 12
-	beaconBlockBodyFieldCount           = 13
+	beaconBlockBodyFieldCount           = 15
 )
 
 type progressiveContainerType uint8
@@ -59,7 +59,7 @@ func ComputeBlockBodyFieldRoots(ctx context.Context, blockBody *BeaconBlockBody)
 	case version.Fulu:
 		fieldRoots = make([][]byte, 13)
 	case version.Gloas:
-		fieldRoots = make([][]byte, 13)
+		fieldRoots = make([][]byte, beaconBlockBodyFieldCount)
 	default:
 		return nil, fmt.Errorf("unknown block body version %s", version.String(blockBody.version))
 	}
@@ -266,6 +266,21 @@ func computeGloasBlockBodyFieldRoots(blockBody *BeaconBlockBody, fieldRoots [][]
 		return err
 	}
 	copy(fieldRoots[12], root[:])
+
+	reveal, err := blockBody.HashChainReveal()
+	if err != nil {
+		return err
+	}
+	copy(fieldRoots[13], reveal[:])
+	registrations, err := blockBody.RandaoCommitmentRegistrations()
+	if err != nil {
+		return err
+	}
+	root, err = ssz.MerkleizeListSSZ(registrations, 128)
+	if err != nil {
+		return err
+	}
+	copy(fieldRoots[14], root[:])
 
 	return nil
 }

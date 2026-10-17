@@ -12,6 +12,7 @@ import (
 	"github.com/minio/sha256-simd"
 	"golang.org/x/crypto/sha3"
 	"google.golang.org/protobuf/proto"
+	"lukechampine.com/blake3"
 
 	"github.com/OffchainLabs/prysm/v7/encoding/bytesutil"
 )
@@ -19,6 +20,11 @@ import (
 // ErrNilProto can occur when attempting to hash a protobuf message that is nil
 // or has nil objects within lists.
 var ErrNilProto = errors.New("cannot hash a nil protobuf message")
+
+// Blake3 returns the default 32-byte unkeyed BLAKE3 digest.
+func Blake3(data []byte) [32]byte {
+	return blake3.Sum256(data)
+}
 
 var sha256Pool = sync.Pool{New: func() any {
 	return sha256.New()

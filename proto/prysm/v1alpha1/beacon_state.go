@@ -269,5 +269,7 @@ func (st *BeaconStateGloas) Copy() *BeaconStateGloas {
 	cp.LatestExecutionPayloadBid = st.LatestExecutionPayloadBid.Copy()
 	cp.PayloadExpectedWithdrawals = CopySlice(st.PayloadExpectedWithdrawals)
 	cp.PtcWindow = CopyPTCWindow(st.PtcWindow)
+	cp.RandaoCommitments = bytesutil.SafeCopy2dBytes(st.RandaoCommitments)
+	cp.PendingRandaoCommitments = CopySlice(st.PendingRandaoCommitments)
 	return &cp
 }

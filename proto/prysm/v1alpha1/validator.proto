@@ -1006,6 +1006,9 @@ message BlockRequest {
 
   // Resolved builder entries for this proposal slot, one bid request per entry.
   BuilderConfig builder_config = 7;
+
+  // Validator's 32 byte hash-chain reveal for the proposed block.
+  bytes hash_chain_reveal = 8 [ (ethereum.eth.ext.ssz_size) = "32" ];
 }
 
 message ProposeResponse {

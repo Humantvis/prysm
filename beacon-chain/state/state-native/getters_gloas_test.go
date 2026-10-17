@@ -1248,3 +1248,113 @@ func TestRotatePTCWindow(t *testing.T) {
 		}
 	})
 }
+
+func TestRandaoCommitmentState(t *testing.T) {
+	params.SetupTestConfigCleanup(t)
+	if fieldparams.Preset == "minimal" {
+		params.OverrideBeaconConfig(params.MinimalSpecConfig())
+	}
+	fixture := gloasStateProtoForProgressiveSSZTests()
+	fixture.LatestBlockHeader = &ethpb.BeaconBlockHeader{ParentRoot: make([]byte, 32), StateRoot: make([]byte, 32), BodyRoot: make([]byte, 32)}
+	fixture.CurrentSyncCommittee.Pubkeys = fixture.CurrentSyncCommittee.Pubkeys[:fieldparams.SyncCommitteeLength]
+	fixture.NextSyncCommittee.Pubkeys = fixture.NextSyncCommittee.Pubkeys[:fieldparams.SyncCommitteeLength]
+	fixture.BuilderPendingPayments = fixture.BuilderPendingPayments[:2*fieldparams.SlotsPerEpoch]
+	fixture.ExecutionPayloadAvailability = make([]byte, fieldparams.BlockRootsLength/8)
+	fixture.ProposerLookahead = make([]primitives.ValidatorIndex, uint64(1+params.BeaconConfig().MinSeedLookahead)*fieldparams.SlotsPerEpoch)
+	st, err := InitializeFromProtoUnsafeGloas(fixture)
+	require.NoError(t, err)
+	commitments, err := st.RandaoCommitments()
+	require.NoError(t, err)
+	require.Equal(t, st.NumValidators(), len(commitments))
+	for _, commitment := range commitments {
+		require.DeepEqual(t, make([]byte, 32), commitment)
+	}
+	assertRoot := func() [32]byte {
+		t.Helper()
+		nativeRoot, err := st.HashTreeRoot(t.Context())
+		require.NoError(t, err)
+		expectedRoot, err := st.ToProto().(*ethpb.BeaconStateGloas).HashTreeRoot()
+		require.NoError(t, err)
+		require.Equal(t, expectedRoot, nativeRoot)
+		return nativeRoot
+	}
+	initialRoot := assertRoot()
+	require.NoError(t, st.UpdateRandaoCommitmentAtIndex(0, [32]byte{42}))
+	updatedRoot := assertRoot()
+	if initialRoot == updatedRoot {
+		t.Fatal("commitment update did not dirty the state root")
+	}
+	copied := st.Copy()
+	require.NoError(t, copied.UpdateRandaoCommitmentAtIndex(0, [32]byte{99}))
+	value, err := st.RandaoCommitmentAtIndex(0)
+	require.NoError(t, err)
+	require.Equal(t, byte(42), value[0])
+	snapshot := st.ToProto().(*ethpb.BeaconStateGloas)
+	snapshot.RandaoCommitments[0][0] = 88
+	commitments, err = st.RandaoCommitments()
+	require.NoError(t, err)
+	commitments[0][0] = 77
+	value, err = st.RandaoCommitmentAtIndex(0)
+	require.NoError(t, err)
+	require.Equal(t, byte(42), value[0])
+	pending := &ethpb.PendingRandaoCommitment{ValidatorIndex: 1, Commitment: make([]byte, 32), ActivationEpoch: 3}
+	require.NoError(t, st.AppendPendingRandaoCommitment(pending))
+	pending.Commitment[0] = 55
+	queuedRoot := assertRoot()
+	if queuedRoot == updatedRoot {
+		t.Fatal("queue append did not dirty the state root")
+	}
+	queue, err := st.PendingRandaoCommitments()
+	require.NoError(t, err)
+	require.Equal(t, byte(0), queue[0].Commitment[0])
+	copied = st.Copy()
+	require.NoError(t, copied.SetPendingRandaoCommitments(nil))
+	queue[0].Commitment[0] = 33
+	queue, err = st.PendingRandaoCommitments()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(queue))
+	require.Equal(t, byte(0), queue[0].Commitment[0])
+	encoded, err := st.MarshalSSZ()
+	require.NoError(t, err)
+	decoded := &ethpb.BeaconStateGloas{}
+	require.NoError(t, decoded.UnmarshalSSZ(encoded))
+	restored, err := InitializeFromProtoUnsafeGloas(decoded)
+	require.NoError(t, err)
+	restoredRoot, err := restored.HashTreeRoot(t.Context())
+	require.NoError(t, err)
+	require.Equal(t, queuedRoot, restoredRoot)
+	require.NoError(t, st.SetPendingRandaoCommitments(nil))
+	require.Equal(t, updatedRoot, assertRoot())
+	_, err = st.RandaoCommitmentAtIndex(primitives.ValidatorIndex(st.NumValidators()))
+	if err == nil {
+		t.Fatal("accepted out-of-range commitment index")
+	}
+	if err := st.UpdateRandaoCommitmentAtIndex(primitives.ValidatorIndex(st.NumValidators()), [32]byte{}); err == nil {
+		t.Fatal("updated an out-of-range commitment")
+	}
+	if err := st.SetRandaoCommitments([][]byte{make([]byte, 32)}); err == nil {
+		t.Fatal("accepted inconsistent registry length")
+	}
+	if err := st.SetRandaoCommitments([][]byte{make([]byte, 31), make([]byte, 32)}); err == nil {
+		t.Fatal("accepted a short commitment")
+	}
+	if err := st.AppendPendingRandaoCommitment(nil); err == nil {
+		t.Fatal("accepted a nil pending entry")
+	}
+	if err := st.SetPendingRandaoCommitments([]*ethpb.PendingRandaoCommitment{{Commitment: make([]byte, 31)}}); err == nil {
+		t.Fatal("accepted a short pending commitment")
+	}
+	legacy := &BeaconState{version: version.Fulu}
+	if _, err := legacy.RandaoCommitmentAtIndex(0); err == nil {
+		t.Fatal("pre-Gloas getter succeeded")
+	}
+	if _, err := legacy.PendingRandaoCommitments(); err == nil {
+		t.Fatal("pre-Gloas queue getter succeeded")
+	}
+	if err := legacy.AppendRandaoCommitment([32]byte{}); err == nil {
+		t.Fatal("pre-Gloas append succeeded")
+	}
+	if err := legacy.SetPendingRandaoCommitments(nil); err == nil {
+		t.Fatal("pre-Gloas queue setter succeeded")
+	}
+}

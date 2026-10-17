@@ -104,6 +104,7 @@ require (
 	honnef.co/go/tools v0.6.0
 	k8s.io/apimachinery v0.30.4
 	k8s.io/client-go v0.30.4
+	lukechampine.com/blake3 v1.4.1
 )
 
 require (
@@ -288,7 +289,6 @@ require (
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gotest.tools/gotestsum v1.13.0 // indirect
-	lukechampine.com/blake3 v1.4.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect

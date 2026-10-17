@@ -47,6 +47,15 @@ func TestUpgradeToGloas_Basic(t *testing.T) {
 	mSt, err := gloas.UpgradeToGloas(t.Context(), st)
 	require.NoError(t, err)
 
+	commitments, err := mSt.RandaoCommitments()
+	require.NoError(t, err)
+	require.Equal(t, mSt.NumValidators(), len(commitments))
+	for _, commitment := range commitments {
+		require.DeepEqual(t, make([]byte, 32), commitment)
+	}
+	pendingCommitments, err := mSt.PendingRandaoCommitments()
+	require.NoError(t, err)
+	require.Equal(t, 0, len(pendingCommitments))
 	require.Equal(t, preForkState.GenesisTime(), mSt.GenesisTime())
 	require.DeepSSZEqual(t, preForkState.GenesisValidatorsRoot(), mSt.GenesisValidatorsRoot())
 	require.Equal(t, preForkState.Slot(), mSt.Slot())

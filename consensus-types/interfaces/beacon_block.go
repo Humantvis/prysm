@@ -72,6 +72,8 @@ type ReadOnlyBeaconBlockBody interface {
 	PayloadAttestations() ([]*ethpb.PayloadAttestation, error)
 	SignedExecutionPayloadBid() (*ethpb.SignedExecutionPayloadBid, error)
 	ParentExecutionRequests() (*enginev1.ExecutionRequestsGloas, error)
+	HashChainReveal() ([32]byte, error)
+	RandaoCommitmentRegistrations() ([]*ethpb.SignedRandaoCommitmentRegistration, error)
 }
 
 type SignedBeaconBlock interface {
@@ -97,6 +99,8 @@ type SignedBeaconBlock interface {
 	SetPayloadAttestations(pa []*ethpb.PayloadAttestation) error
 	SetSignedExecutionPayloadBid(header *ethpb.SignedExecutionPayloadBid) error
 	SetParentExecutionRequests(r *enginev1.ExecutionRequestsGloas) error
+	SetHashChainReveal([]byte) error
+	SetRandaoCommitmentRegistrations([]*ethpb.SignedRandaoCommitmentRegistration) error
 	Unblind(e ExecutionData) error
 }
 

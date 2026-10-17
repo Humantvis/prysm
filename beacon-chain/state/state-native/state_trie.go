@@ -698,6 +698,20 @@ func InitializeFromProtoUnsafeGloas(st *ethpb.BeaconStateGloas) (state.BeaconSta
 		return nil, errors.New("received nil state")
 	}
 
+	if st.RandaoCommitments == nil {
+		st.RandaoCommitments = make([][]byte, len(st.Validators))
+		for i := range st.RandaoCommitments {
+			st.RandaoCommitments[i] = make([]byte, 32)
+		}
+	}
+	if len(st.RandaoCommitments) != len(st.Validators) {
+		return nil, fmt.Errorf("randao commitments length does not match validators")
+	}
+	for _, commitment := range st.RandaoCommitments {
+		if len(commitment) != 32 {
+			return nil, fmt.Errorf("randao commitment must be 32 bytes")
+		}
+	}
 	hRoots := customtypes.HistoricalRoots(make([][32]byte, len(st.HistoricalRoots)))
 	for i, r := range st.HistoricalRoots {
 		hRoots[i] = bytesutil.ToBytes32(r)
@@ -751,6 +765,8 @@ func InitializeFromProtoUnsafeGloas(st *ethpb.BeaconStateGloas) (state.BeaconSta
 		latestBlockHash:               st.LatestBlockHash,
 		payloadExpectedWithdrawals:    st.PayloadExpectedWithdrawals,
 		ptcWindow:                     st.PtcWindow,
+		randaoCommitments:             st.RandaoCommitments,
+		pendingRandaoCommitments:      st.PendingRandaoCommitments,
 		dirtyFields:                   make(map[types.FieldIndex]bool, fieldCount),
 		dirtyIndices:                  make(map[types.FieldIndex][]uint64, fieldCount),
 		stateFieldLeaves:              make(map[types.FieldIndex]*fieldtrie.FieldTrie, len(fieldMap)),
@@ -855,6 +871,8 @@ func (b *BeaconState) Copy() state.BeaconState {
 		slashings:                 b.slashings,
 		proposerLookahead:         b.proposerLookahead,
 		ptcWindow:                 b.ptcWindow,
+		randaoCommitments:         bytesutil.SafeCopy2dBytes(b.randaoCommitments),
+		pendingRandaoCommitments:  ethpb.CopySlice(b.pendingRandaoCommitments),
 
 		// Large arrays, increases over time.
 		balancesMultiValue:         b.balancesMultiValue,
@@ -1417,6 +1435,10 @@ func (b *BeaconState) rootSelector(ctx context.Context, field types.FieldIndex) 
 		return stateutil.PayloadExpectedWithdrawalsRoot(b.version, b.payloadExpectedWithdrawals)
 	case types.PTCWindow:
 		return stateutil.PTCWindowRoot(b.ptcWindow)
+	case types.RandaoCommitments:
+		return b.randaoCommitmentsRoot()
+	case types.PendingRandaoCommitments:
+		return ssz.MerkleizeListSSZProgressive(b.pendingRandaoCommitments)
 	}
 	return [32]byte{}, errors.New("invalid field index provided")
 }

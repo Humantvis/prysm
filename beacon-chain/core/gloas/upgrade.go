@@ -288,10 +288,16 @@ func upgradeToGloas(beaconState state.BeaconState) (state.BeaconState, error) {
 
 	latestBlockHeader := beaconState.LatestBlockHeader()
 
+	commitments := make([][]byte, len(beaconState.Validators()))
+	for i := range commitments {
+		commitments[i] = make([]byte, 32)
+	}
 	s := &ethpb.BeaconStateGloas{
-		GenesisTime:           uint64(beaconState.GenesisTime().Unix()),
-		GenesisValidatorsRoot: beaconState.GenesisValidatorsRoot(),
-		Slot:                  beaconState.Slot(),
+		RandaoCommitments:        commitments,
+		PendingRandaoCommitments: []*ethpb.PendingRandaoCommitment{},
+		GenesisTime:              uint64(beaconState.GenesisTime().Unix()),
+		GenesisValidatorsRoot:    beaconState.GenesisValidatorsRoot(),
+		Slot:                     beaconState.Slot(),
 		Fork: &ethpb.Fork{
 			PreviousVersion: beaconState.Fork().CurrentVersion,
 			CurrentVersion:  params.BeaconConfig().GloasForkVersion,

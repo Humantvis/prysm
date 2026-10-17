@@ -5,11 +5,256 @@ package eth
 import (
 	binary "encoding/binary"
 	"fmt"
+
 	go_bitfield "github.com/OffchainLabs/go-bitfield"
 	ssz "github.com/OffchainLabs/methodical-ssz/ssz"
 	primitives "github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
 	v1 "github.com/OffchainLabs/prysm/v7/proto/engine/v1"
 )
+
+func (c *RandaoCommitmentRegistration) SizeSSZ() int {
+	size := 40
+
+	return size
+}
+
+func (c *RandaoCommitmentRegistration) MarshalSSZ() ([]byte, error) {
+	buf := make([]byte, c.SizeSSZ())
+	return c.MarshalSSZTo(buf[:0])
+}
+
+func (c *RandaoCommitmentRegistration) MarshalSSZTo(dst []byte) ([]byte, error) {
+	var err error
+
+	// Field 0: ValidatorIndex
+	if dst, err = c.ValidatorIndex.MarshalSSZTo(dst); err != nil {
+		return nil, fmt.Errorf("ValidatorIndex: %w", err)
+	}
+
+	// Field 1: Commitment
+	if len(c.Commitment) != 32 {
+		return nil, ssz.ErrBytesLength
+	}
+	dst = append(dst, c.Commitment...)
+
+	return dst, err
+}
+
+func (c *RandaoCommitmentRegistration) UnmarshalSSZ(buf []byte) error {
+	var err error
+	size := uint64(len(buf))
+	if size != 40 {
+		return ssz.ErrSize
+	}
+
+	sszSlice0 := buf[0:8]  // c.ValidatorIndex
+	sszSlice1 := buf[8:40] // c.Commitment
+
+	// Field 0: ValidatorIndex
+	if err = c.ValidatorIndex.UnmarshalSSZ(sszSlice0); err != nil {
+		return fmt.Errorf("ValidatorIndex: %w", err)
+	}
+
+	// Field 1: Commitment
+	c.Commitment = make([]byte, 0, 32)
+	c.Commitment = append(c.Commitment, sszSlice1...)
+	return err
+}
+
+func (c *RandaoCommitmentRegistration) HashTreeRoot() ([32]byte, error) {
+	hh := ssz.DefaultHasherPool.Get()
+	if err := c.HashTreeRootWith(hh); err != nil {
+		ssz.DefaultHasherPool.Put(hh)
+		return [32]byte{}, err
+	}
+	root, err := hh.HashRoot()
+	ssz.DefaultHasherPool.Put(hh)
+	return root, err
+}
+
+func (c *RandaoCommitmentRegistration) HashTreeRootWith(hh *ssz.Hasher) (err error) {
+	indx := hh.Index()
+	// Field 0: ValidatorIndex
+	if err := c.ValidatorIndex.HashTreeRootWith(hh); err != nil {
+		return fmt.Errorf("ValidatorIndex: %w", err)
+	}
+	// Field 1: Commitment
+	if len(c.Commitment) != 32 {
+		return ssz.ErrBytesLength
+	}
+	hh.PutBytes(c.Commitment)
+	hh.Merkleize(indx)
+	return nil
+}
+
+func (c *SignedRandaoCommitmentRegistration) SizeSSZ() int {
+	size := 136
+
+	return size
+}
+
+func (c *SignedRandaoCommitmentRegistration) MarshalSSZ() ([]byte, error) {
+	buf := make([]byte, c.SizeSSZ())
+	return c.MarshalSSZTo(buf[:0])
+}
+
+func (c *SignedRandaoCommitmentRegistration) MarshalSSZTo(dst []byte) ([]byte, error) {
+	var err error
+
+	// Field 0: Message
+	if c.Message == nil {
+		c.Message = new(RandaoCommitmentRegistration)
+	}
+	if dst, err = c.Message.MarshalSSZTo(dst); err != nil {
+		return nil, fmt.Errorf("Message: %w", err)
+	}
+
+	// Field 1: Signature
+	if len(c.Signature) != 96 {
+		return nil, ssz.ErrBytesLength
+	}
+	dst = append(dst, c.Signature...)
+
+	return dst, err
+}
+
+func (c *SignedRandaoCommitmentRegistration) UnmarshalSSZ(buf []byte) error {
+	var err error
+	size := uint64(len(buf))
+	if size != 136 {
+		return ssz.ErrSize
+	}
+
+	sszSlice0 := buf[0:40]   // c.Message
+	sszSlice1 := buf[40:136] // c.Signature
+
+	// Field 0: Message
+	c.Message = new(RandaoCommitmentRegistration)
+	if err = c.Message.UnmarshalSSZ(sszSlice0); err != nil {
+		return fmt.Errorf("Message: %w", err)
+	}
+
+	// Field 1: Signature
+	c.Signature = make([]byte, 0, 96)
+	c.Signature = append(c.Signature, sszSlice1...)
+	return err
+}
+
+func (c *SignedRandaoCommitmentRegistration) HashTreeRoot() ([32]byte, error) {
+	hh := ssz.DefaultHasherPool.Get()
+	if err := c.HashTreeRootWith(hh); err != nil {
+		ssz.DefaultHasherPool.Put(hh)
+		return [32]byte{}, err
+	}
+	root, err := hh.HashRoot()
+	ssz.DefaultHasherPool.Put(hh)
+	return root, err
+}
+
+func (c *SignedRandaoCommitmentRegistration) HashTreeRootWith(hh *ssz.Hasher) (err error) {
+	indx := hh.Index()
+	// Field 0: Message
+	if err := c.Message.HashTreeRootWith(hh); err != nil {
+		return fmt.Errorf("Message: %w", err)
+	}
+	// Field 1: Signature
+	if len(c.Signature) != 96 {
+		return ssz.ErrBytesLength
+	}
+	hh.PutBytes(c.Signature)
+	hh.Merkleize(indx)
+	return nil
+}
+
+func (c *PendingRandaoCommitment) SizeSSZ() int {
+	size := 48
+
+	return size
+}
+
+func (c *PendingRandaoCommitment) MarshalSSZ() ([]byte, error) {
+	buf := make([]byte, c.SizeSSZ())
+	return c.MarshalSSZTo(buf[:0])
+}
+
+func (c *PendingRandaoCommitment) MarshalSSZTo(dst []byte) ([]byte, error) {
+	var err error
+
+	// Field 0: ValidatorIndex
+	if dst, err = c.ValidatorIndex.MarshalSSZTo(dst); err != nil {
+		return nil, fmt.Errorf("ValidatorIndex: %w", err)
+	}
+
+	// Field 1: Commitment
+	if len(c.Commitment) != 32 {
+		return nil, ssz.ErrBytesLength
+	}
+	dst = append(dst, c.Commitment...)
+
+	// Field 2: ActivationEpoch
+	if dst, err = c.ActivationEpoch.MarshalSSZTo(dst); err != nil {
+		return nil, fmt.Errorf("ActivationEpoch: %w", err)
+	}
+
+	return dst, err
+}
+
+func (c *PendingRandaoCommitment) UnmarshalSSZ(buf []byte) error {
+	var err error
+	size := uint64(len(buf))
+	if size != 48 {
+		return ssz.ErrSize
+	}
+
+	sszSlice0 := buf[0:8]   // c.ValidatorIndex
+	sszSlice1 := buf[8:40]  // c.Commitment
+	sszSlice2 := buf[40:48] // c.ActivationEpoch
+
+	// Field 0: ValidatorIndex
+	if err = c.ValidatorIndex.UnmarshalSSZ(sszSlice0); err != nil {
+		return fmt.Errorf("ValidatorIndex: %w", err)
+	}
+
+	// Field 1: Commitment
+	c.Commitment = make([]byte, 0, 32)
+	c.Commitment = append(c.Commitment, sszSlice1...)
+
+	// Field 2: ActivationEpoch
+	if err = c.ActivationEpoch.UnmarshalSSZ(sszSlice2); err != nil {
+		return fmt.Errorf("ActivationEpoch: %w", err)
+	}
+	return err
+}
+
+func (c *PendingRandaoCommitment) HashTreeRoot() ([32]byte, error) {
+	hh := ssz.DefaultHasherPool.Get()
+	if err := c.HashTreeRootWith(hh); err != nil {
+		ssz.DefaultHasherPool.Put(hh)
+		return [32]byte{}, err
+	}
+	root, err := hh.HashRoot()
+	ssz.DefaultHasherPool.Put(hh)
+	return root, err
+}
+
+func (c *PendingRandaoCommitment) HashTreeRootWith(hh *ssz.Hasher) (err error) {
+	indx := hh.Index()
+	// Field 0: ValidatorIndex
+	if err := c.ValidatorIndex.HashTreeRootWith(hh); err != nil {
+		return fmt.Errorf("ValidatorIndex: %w", err)
+	}
+	// Field 1: Commitment
+	if len(c.Commitment) != 32 {
+		return ssz.ErrBytesLength
+	}
+	hh.PutBytes(c.Commitment)
+	// Field 2: ActivationEpoch
+	if err := c.ActivationEpoch.HashTreeRootWith(hh); err != nil {
+		return fmt.Errorf("ActivationEpoch: %w", err)
+	}
+	hh.Merkleize(indx)
+	return nil
+}
 
 func (c *LightClientHeaderGloas) SizeSSZ() int {
 	size := 496
@@ -1159,7 +1404,7 @@ func (c *AttesterSlashingGloas) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 }
 
 func (c *BeaconBlockBodyGloas) SizeSSZ() int {
-	size := 336
+	size := 372
 	size += len(c.ProposerSlashings) * 416
 	for _, o := range c.AttesterSlashings {
 		size += 4
@@ -1181,6 +1426,7 @@ func (c *BeaconBlockBodyGloas) SizeSSZ() int {
 		c.ParentExecutionRequests = new(v1.ExecutionRequestsGloas)
 	}
 	size += c.ParentExecutionRequests.SizeSSZ()
+	size += len(c.RandaoCommitmentRegistrations) * 136
 	return size
 }
 
@@ -1191,7 +1437,7 @@ func (c *BeaconBlockBodyGloas) MarshalSSZ() ([]byte, error) {
 
 func (c *BeaconBlockBodyGloas) MarshalSSZTo(dst []byte) ([]byte, error) {
 	var err error
-	offset := 336
+	offset := 372
 
 	// Field 0: RandaoReveal
 	if len(c.RandaoReveal) != 96 {
@@ -1269,6 +1515,16 @@ func (c *BeaconBlockBodyGloas) MarshalSSZTo(dst []byte) ([]byte, error) {
 	dst = ssz.WriteOffset(dst, offset)
 	offset += c.ParentExecutionRequests.SizeSSZ()
 
+	// Field 13: HashChainReveal
+	if len(c.HashChainReveal) != 32 {
+		return nil, ssz.ErrBytesLength
+	}
+	dst = append(dst, c.HashChainReveal...)
+
+	// Field 14: RandaoCommitmentRegistrations
+	dst = ssz.WriteOffset(dst, offset)
+	offset += len(c.RandaoCommitmentRegistrations) * 136
+
 	// Field 3: ProposerSlashings
 	for _, o := range c.ProposerSlashings {
 		if dst, err = o.MarshalSSZTo(dst); err != nil {
@@ -1341,23 +1597,34 @@ func (c *BeaconBlockBodyGloas) MarshalSSZTo(dst []byte) ([]byte, error) {
 	if dst, err = c.ParentExecutionRequests.MarshalSSZTo(dst); err != nil {
 		return nil, fmt.Errorf("ParentExecutionRequests: %w", err)
 	}
+
+	// Field 14: RandaoCommitmentRegistrations
+	if len(c.RandaoCommitmentRegistrations) > 128 {
+		return nil, ssz.ErrListTooBig
+	}
+	for _, o := range c.RandaoCommitmentRegistrations {
+		if dst, err = o.MarshalSSZTo(dst); err != nil {
+			return nil, fmt.Errorf("RandaoCommitmentRegistrations: %w", err)
+		}
+	}
 	return dst, err
 }
 
 func (c *BeaconBlockBodyGloas) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
-	if size < 336 {
+	if size < 372 {
 		return ssz.ErrSize
 	}
 
-	sszSlice0 := buf[0:96]    // c.RandaoReveal
-	sszSlice1 := buf[96:168]  // c.Eth1Data
-	sszSlice2 := buf[168:200] // c.Graffiti
-	sszSlice8 := buf[220:320] // c.SyncAggregate
+	sszSlice0 := buf[0:96]     // c.RandaoReveal
+	sszSlice1 := buf[96:168]   // c.Eth1Data
+	sszSlice2 := buf[168:200]  // c.Graffiti
+	sszSlice8 := buf[220:320]  // c.SyncAggregate
+	sszSlice13 := buf[336:368] // c.HashChainReveal
 
 	sszVarOffset3 := ssz.ReadOffset(buf[200:204]) // c.ProposerSlashings
-	if sszVarOffset3 != 336 {
+	if sszVarOffset3 != 372 {
 		return ssz.ErrInvalidVariableOffset
 	}
 	if sszVarOffset3 > size {
@@ -1395,6 +1662,10 @@ func (c *BeaconBlockBodyGloas) UnmarshalSSZ(buf []byte) error {
 	if sszVarOffset12 > size || sszVarOffset12 < sszVarOffset11 {
 		return ssz.ErrOffset
 	}
+	sszVarOffset14 := ssz.ReadOffset(buf[368:372]) // c.RandaoCommitmentRegistrations
+	if sszVarOffset14 > size || sszVarOffset14 < sszVarOffset12 {
+		return ssz.ErrOffset
+	}
 	sszSlice3 := buf[sszVarOffset3:sszVarOffset4]    // c.ProposerSlashings
 	sszSlice4 := buf[sszVarOffset4:sszVarOffset5]    // c.AttesterSlashings
 	sszSlice5 := buf[sszVarOffset5:sszVarOffset6]    // c.Attestations
@@ -1403,7 +1674,8 @@ func (c *BeaconBlockBodyGloas) UnmarshalSSZ(buf []byte) error {
 	sszSlice9 := buf[sszVarOffset9:sszVarOffset10]   // c.BlsToExecutionChanges
 	sszSlice10 := buf[sszVarOffset10:sszVarOffset11] // c.SignedExecutionPayloadBid
 	sszSlice11 := buf[sszVarOffset11:sszVarOffset12] // c.PayloadAttestations
-	sszSlice12 := buf[sszVarOffset12:]               // c.ParentExecutionRequests
+	sszSlice12 := buf[sszVarOffset12:sszVarOffset14] // c.ParentExecutionRequests
+	sszSlice14 := buf[sszVarOffset14:]               // c.RandaoCommitmentRegistrations
 
 	// Field 0: RandaoReveal
 	c.RandaoReveal = make([]byte, 0, 96)
@@ -1641,6 +1913,31 @@ func (c *BeaconBlockBodyGloas) UnmarshalSSZ(buf []byte) error {
 	if err = c.ParentExecutionRequests.UnmarshalSSZ(sszSlice12); err != nil {
 		return fmt.Errorf("ParentExecutionRequests: %w", err)
 	}
+
+	// Field 13: HashChainReveal
+	c.HashChainReveal = make([]byte, 0, 32)
+	c.HashChainReveal = append(c.HashChainReveal, sszSlice13...)
+
+	// Field 14: RandaoCommitmentRegistrations
+	{
+		if len(sszSlice14)%136 != 0 {
+			return fmt.Errorf("misaligned bytes: c.RandaoCommitmentRegistrations length is %d, which is not a multiple of 136: %w", len(sszSlice14), ssz.ErrIncorrectListSize)
+		}
+		numElem := len(sszSlice14) / 136
+		if numElem > 128 {
+			return fmt.Errorf("ssz-max exceeded: c.RandaoCommitmentRegistrations has %d elements, ssz-max is 128: %w", numElem, ssz.ErrListTooBig)
+		}
+		c.RandaoCommitmentRegistrations = make([]*SignedRandaoCommitmentRegistration, numElem)
+		for i := 0; i < numElem; i++ {
+			var tmp *SignedRandaoCommitmentRegistration
+			tmp = new(SignedRandaoCommitmentRegistration)
+			tmpSlice := sszSlice14[i*136 : (1+i)*136]
+			if err = tmp.UnmarshalSSZ(tmpSlice); err != nil {
+				return fmt.Errorf("RandaoCommitmentRegistrations: %w", err)
+			}
+			c.RandaoCommitmentRegistrations[i] = tmp
+		}
+	}
 	return err
 }
 
@@ -1652,7 +1949,7 @@ func (c *BeaconBlockBodyGloas) HashTreeRootWith(hh *ssz.Hasher) error {
 	return c.ProgressiveHashTreeRootWith(hh)
 }
 
-var activeFieldsBeaconBlockBodyGloas = []byte{0b11111111, 0b00011111}
+var activeFieldsBeaconBlockBodyGloas = []byte{0b11111111, 0b01111111}
 
 func (c *BeaconBlockBodyGloas) ProgressiveHashTreeRoot() ([32]byte, error) {
 	hh := ssz.DefaultHasherPool.Get()
@@ -1762,6 +2059,24 @@ func (c *BeaconBlockBodyGloas) ProgressiveHashTreeRootWith(hh *ssz.Hasher) (err 
 	// Field 12: ParentExecutionRequests
 	if err := c.ParentExecutionRequests.HashTreeRootWith(hh); err != nil {
 		return fmt.Errorf("ParentExecutionRequests: %w", err)
+	}
+	// Field 13: HashChainReveal
+	if len(c.HashChainReveal) != 32 {
+		return ssz.ErrBytesLength
+	}
+	hh.PutBytes(c.HashChainReveal)
+	// Field 14: RandaoCommitmentRegistrations
+	{
+		if len(c.RandaoCommitmentRegistrations) > 128 {
+			return ssz.ErrListTooBig
+		}
+		subIndx := hh.Index()
+		for _, o := range c.RandaoCommitmentRegistrations {
+			if err := o.HashTreeRootWith(hh); err != nil {
+				return fmt.Errorf("RandaoCommitmentRegistrations: %w", err)
+			}
+		}
+		hh.MerkleizeWithMixin(subIndx, uint64(len(c.RandaoCommitmentRegistrations)), 128)
 	}
 	hh.MerkleizeProgressiveWithActiveFields(indx, activeFieldsBeaconBlockBodyGloas)
 	return nil
@@ -2126,7 +2441,7 @@ func (c *BeaconBlockGloas) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 }
 
 func (c *BeaconStateGloas) SizeSSZ() int {
-	size := 14405
+	size := 14413
 	size += len(c.HistoricalRoots) * 32
 	size += len(c.Eth1DataVotes) * 72
 	size += len(c.Validators) * 121
@@ -2145,6 +2460,8 @@ func (c *BeaconStateGloas) SizeSSZ() int {
 	}
 	size += c.LatestExecutionPayloadBid.SizeSSZ()
 	size += len(c.PayloadExpectedWithdrawals) * 44
+	size += len(c.RandaoCommitments) * 32
+	size += len(c.PendingRandaoCommitments) * 48
 	return size
 }
 
@@ -2155,7 +2472,7 @@ func (c *BeaconStateGloas) MarshalSSZ() ([]byte, error) {
 
 func (c *BeaconStateGloas) MarshalSSZTo(dst []byte) ([]byte, error) {
 	var err error
-	offset := 14405
+	offset := 14413
 
 	// Field 0: GenesisTime
 	dst = binary.LittleEndian.AppendUint64(dst, c.GenesisTime)
@@ -2431,6 +2748,14 @@ func (c *BeaconStateGloas) MarshalSSZTo(dst []byte) ([]byte, error) {
 		}
 	}
 
+	// Field 46: RandaoCommitments
+	dst = ssz.WriteOffset(dst, offset)
+	offset += len(c.RandaoCommitments) * 32
+
+	// Field 47: PendingRandaoCommitments
+	dst = ssz.WriteOffset(dst, offset)
+	offset += len(c.PendingRandaoCommitments) * 48
+
 	// Field 7: HistoricalRoots
 	if len(c.HistoricalRoots) > 16777216 {
 		return nil, ssz.ErrListTooBig
@@ -2531,13 +2856,31 @@ func (c *BeaconStateGloas) MarshalSSZTo(dst []byte) ([]byte, error) {
 			return nil, fmt.Errorf("PayloadExpectedWithdrawals: %w", err)
 		}
 	}
+
+	// Field 46: RandaoCommitments
+	if len(c.RandaoCommitments) > 1099511627776 {
+		return nil, ssz.ErrListTooBig
+	}
+	for _, o := range c.RandaoCommitments {
+		if len(o) != 32 {
+			return nil, ssz.ErrBytesLength
+		}
+		dst = append(dst, o...)
+	}
+
+	// Field 47: PendingRandaoCommitments
+	for _, o := range c.PendingRandaoCommitments {
+		if dst, err = o.MarshalSSZTo(dst); err != nil {
+			return nil, fmt.Errorf("PendingRandaoCommitments: %w", err)
+		}
+	}
 	return dst, err
 }
 
 func (c *BeaconStateGloas) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
-	if size < 14405 {
+	if size < 14413 {
 		return ssz.ErrSize
 	}
 
@@ -2574,7 +2917,7 @@ func (c *BeaconStateGloas) UnmarshalSSZ(buf []byte) error {
 	sszSlice45 := buf[11333:14405] // c.PtcWindow
 
 	sszVarOffset7 := ssz.ReadOffset(buf[4272:4276]) // c.HistoricalRoots
-	if sszVarOffset7 != 14405 {
+	if sszVarOffset7 != 14413 {
 		return ssz.ErrInvalidVariableOffset
 	}
 	if sszVarOffset7 > size {
@@ -2636,6 +2979,14 @@ func (c *BeaconStateGloas) UnmarshalSSZ(buf []byte) error {
 	if sszVarOffset44 > size || sszVarOffset44 < sszVarOffset43 {
 		return ssz.ErrOffset
 	}
+	sszVarOffset46 := ssz.ReadOffset(buf[14405:14409]) // c.RandaoCommitments
+	if sszVarOffset46 > size || sszVarOffset46 < sszVarOffset44 {
+		return ssz.ErrOffset
+	}
+	sszVarOffset47 := ssz.ReadOffset(buf[14409:14413]) // c.PendingRandaoCommitments
+	if sszVarOffset47 > size || sszVarOffset47 < sszVarOffset46 {
+		return ssz.ErrOffset
+	}
 	sszSlice7 := buf[sszVarOffset7:sszVarOffset9]    // c.HistoricalRoots
 	sszSlice9 := buf[sszVarOffset9:sszVarOffset11]   // c.Eth1DataVotes
 	sszSlice11 := buf[sszVarOffset11:sszVarOffset12] // c.Validators
@@ -2650,7 +3001,9 @@ func (c *BeaconStateGloas) UnmarshalSSZ(buf []byte) error {
 	sszSlice38 := buf[sszVarOffset38:sszVarOffset42] // c.Builders
 	sszSlice42 := buf[sszVarOffset42:sszVarOffset43] // c.BuilderPendingWithdrawals
 	sszSlice43 := buf[sszVarOffset43:sszVarOffset44] // c.LatestExecutionPayloadBid
-	sszSlice44 := buf[sszVarOffset44:]               // c.PayloadExpectedWithdrawals
+	sszSlice44 := buf[sszVarOffset44:sszVarOffset46] // c.PayloadExpectedWithdrawals
+	sszSlice46 := buf[sszVarOffset46:sszVarOffset47] // c.RandaoCommitments
+	sszSlice47 := buf[sszVarOffset47:]               // c.PendingRandaoCommitments
 
 	// Field 0: GenesisTime
 	c.GenesisTime = binary.LittleEndian.Uint64(sszSlice0)
@@ -3119,6 +3472,47 @@ func (c *BeaconStateGloas) UnmarshalSSZ(buf []byte) error {
 			c.PtcWindow[i] = tmp
 		}
 	}
+
+	// Field 46: RandaoCommitments
+	{
+		if len(sszSlice46)%32 != 0 {
+			return fmt.Errorf("misaligned bytes: c.RandaoCommitments length is %d, which is not a multiple of 32: %w", len(sszSlice46), ssz.ErrIncorrectListSize)
+		}
+		numElem := len(sszSlice46) / 32
+		if numElem > 1099511627776 {
+			return fmt.Errorf("ssz-max exceeded: c.RandaoCommitments has %d elements, ssz-max is 1099511627776: %w", numElem, ssz.ErrListTooBig)
+		}
+		c.RandaoCommitments = make([][]byte, numElem)
+		for i := 0; i < numElem; i++ {
+			var tmp []byte
+
+			tmpSlice := sszSlice46[i*32 : (1+i)*32]
+			tmp = make([]byte, 0, 32)
+			tmp = append(tmp, tmpSlice...)
+			c.RandaoCommitments[i] = tmp
+		}
+	}
+
+	// Field 47: PendingRandaoCommitments
+	{
+		if len(sszSlice47)%48 != 0 {
+			return fmt.Errorf("misaligned bytes: c.PendingRandaoCommitments length is %d, which is not a multiple of 48: %w", len(sszSlice47), ssz.ErrIncorrectListSize)
+		}
+		numElem := len(sszSlice47) / 48
+		if numElem > 1099511627776 {
+			return fmt.Errorf("ssz-max exceeded: c.PendingRandaoCommitments has %d elements, ssz-max is 1099511627776: %w", numElem, ssz.ErrListTooBig)
+		}
+		c.PendingRandaoCommitments = make([]*PendingRandaoCommitment, numElem)
+		for i := 0; i < numElem; i++ {
+			var tmp *PendingRandaoCommitment
+			tmp = new(PendingRandaoCommitment)
+			tmpSlice := sszSlice47[i*48 : (1+i)*48]
+			if err = tmp.UnmarshalSSZ(tmpSlice); err != nil {
+				return fmt.Errorf("PendingRandaoCommitments: %w", err)
+			}
+			c.PendingRandaoCommitments[i] = tmp
+		}
+	}
 	return err
 }
 
@@ -3130,7 +3524,7 @@ func (c *BeaconStateGloas) HashTreeRootWith(hh *ssz.Hasher) error {
 	return c.ProgressiveHashTreeRootWith(hh)
 }
 
-var activeFieldsBeaconStateGloas = []byte{0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b00111111}
+var activeFieldsBeaconStateGloas = []byte{0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111}
 
 func (c *BeaconStateGloas) ProgressiveHashTreeRoot() ([32]byte, error) {
 	hh := ssz.DefaultHasherPool.Get()
@@ -3470,6 +3864,30 @@ func (c *BeaconStateGloas) ProgressiveHashTreeRootWith(hh *ssz.Hasher) (err erro
 			}
 		}
 		hh.Merkleize(subIndx)
+	}
+	// Field 46: RandaoCommitments
+	{
+		if len(c.RandaoCommitments) > 1099511627776 {
+			return ssz.ErrListTooBig
+		}
+		subIndx := hh.Index()
+		for _, o := range c.RandaoCommitments {
+			if len(o) != 32 {
+				return ssz.ErrBytesLength
+			}
+			hh.Append(o)
+		}
+		hh.MerkleizeWithMixin(subIndx, uint64(len(c.RandaoCommitments)), 1099511627776)
+	}
+	// Field 47: PendingRandaoCommitments
+	{
+		subIndx := hh.Index()
+		for _, o := range c.PendingRandaoCommitments {
+			if err := o.HashTreeRootWith(hh); err != nil {
+				return fmt.Errorf("PendingRandaoCommitments: %w", err)
+			}
+		}
+		hh.MerkleizeProgressiveWithMixin(subIndx, uint64(len(c.PendingRandaoCommitments)))
 	}
 	hh.MerkleizeProgressiveWithActiveFields(indx, activeFieldsBeaconStateGloas)
 	return nil

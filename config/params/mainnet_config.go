@@ -203,6 +203,11 @@ var mainnetBeaconConfig = &BeaconChainConfig{
 	DomainBuilderRequestAuth:          bytesutil.Uint32ToBytes4(0x0B000001),
 	DomainBuilderDeposit:              bytesutil.Uint32ToBytes4(0x0E000000),
 
+	// Hash-chain RANDAO (EIP-8321).
+	DomainRandaoCommitmentRegistration: [4]byte{0x0f, 0x00, 0x00, 0x00},
+	CommitmentRegistrationDelay:        3,
+	MaxRandaoCommitmentRegistrations:   128,
+
 	// Prysm constants.
 	GenesisValidatorsRoot:          [32]byte{75, 54, 61, 185, 78, 40, 97, 32, 215, 110, 185, 5, 52, 15, 221, 78, 84, 191, 233, 240, 107, 243, 63, 246, 207, 90, 210, 127, 81, 27, 254, 149},
 	GweiPerEth:                     1000000000,
@@ -226,7 +231,7 @@ var mainnetBeaconConfig = &BeaconChainConfig{
 	BeaconStateDenebFieldCount:     28,
 	BeaconStateElectraFieldCount:   37,
 	BeaconStateFuluFieldCount:      38,
-	BeaconStateGloasFieldCount:     46,
+	BeaconStateGloasFieldCount:     48,
 
 	// Slasher related values.
 	WeakSubjectivityPeriod:          54000,
