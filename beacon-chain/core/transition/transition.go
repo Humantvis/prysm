@@ -79,6 +79,13 @@ func ExecuteStateTransition(
 		return nil, errors.Wrap(err, "could not execute state transition")
 	}
 
+	// EIP-8321: a block whose proposer reveals through the hash chain has no BLS
+	// randao signature, so a block without attestations or BLS changes can have an
+	// empty batch. An empty batch has nothing to reject, but blst reports it as invalid.
+	if len(set.Signatures) == 0 {
+		return postState, nil
+	}
+
 	var valid bool
 	if features.Get().EnableVerboseSigVerification {
 		valid, err = set.VerifyVerbosely()
