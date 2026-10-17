@@ -40,26 +40,28 @@ var (
 
 // BeaconBlockBody is the main beacon block body structure. It can represent any block type.
 type BeaconBlockBody struct {
-	version                   int
-	randaoReveal              [field_params.BLSSignatureLength]byte
-	eth1Data                  *eth.Eth1Data
-	graffiti                  [field_params.RootLength]byte
-	proposerSlashings         []*eth.ProposerSlashing
-	attesterSlashings         []*eth.AttesterSlashing
-	attesterSlashingsElectra  []*eth.AttesterSlashingElectra
-	attesterSlashingsGloas    []*eth.AttesterSlashingGloas
-	attestations              []*eth.Attestation
-	attestationsElectra       []*eth.AttestationElectra
-	attestationsGloas         []*eth.AttestationGloas
-	deposits                  []*eth.Deposit
-	voluntaryExits            []*eth.SignedVoluntaryExit
-	syncAggregate             *eth.SyncAggregate
-	executionPayload          interfaces.ExecutionData
-	executionPayloadHeader    interfaces.ExecutionData
-	blsToExecutionChanges     []*eth.SignedBLSToExecutionChange
-	blobKzgCommitments        [][]byte
-	executionRequests         *enginev1.ExecutionRequests
-	signedExecutionPayloadBid *eth.SignedExecutionPayloadBid
+	hashChainReveal               [32]byte
+	randaoCommitmentRegistrations []*eth.SignedRandaoCommitmentRegistration
+	version                       int
+	randaoReveal                  [field_params.BLSSignatureLength]byte
+	eth1Data                      *eth.Eth1Data
+	graffiti                      [field_params.RootLength]byte
+	proposerSlashings             []*eth.ProposerSlashing
+	attesterSlashings             []*eth.AttesterSlashing
+	attesterSlashingsElectra      []*eth.AttesterSlashingElectra
+	attesterSlashingsGloas        []*eth.AttesterSlashingGloas
+	attestations                  []*eth.Attestation
+	attestationsElectra           []*eth.AttestationElectra
+	attestationsGloas             []*eth.AttestationGloas
+	deposits                      []*eth.Deposit
+	voluntaryExits                []*eth.SignedVoluntaryExit
+	syncAggregate                 *eth.SyncAggregate
+	executionPayload              interfaces.ExecutionData
+	executionPayloadHeader        interfaces.ExecutionData
+	blsToExecutionChanges         []*eth.SignedBLSToExecutionChange
+	blobKzgCommitments            [][]byte
+	executionRequests             *enginev1.ExecutionRequests
+	signedExecutionPayloadBid     *eth.SignedExecutionPayloadBid
 	// signedExecutionPayloadBidHeze replaces signedExecutionPayloadBid from Heze.
 	signedExecutionPayloadBidHeze *eth.SignedExecutionPayloadBidHeze
 	payloadAttestations           []*eth.PayloadAttestation

@@ -64,6 +64,8 @@ func ComputeBlockBodyFieldRoots(ctx context.Context, blockBody *BeaconBlockBody)
 		fieldRoots = make([][]byte, 13)
 	case version.Gloas, version.Heze:
 		fieldRoots = make([][]byte, 13)
+	case version.Eip8321:
+		fieldRoots = make([][]byte, 15)
 	default:
 		return nil, fmt.Errorf("unknown block body version %s", version.String(blockBody.version))
 	}
@@ -220,6 +222,15 @@ func ComputeBlockBodyFieldRoots(ctx context.Context, blockBody *BeaconBlockBody)
 		if err := computeGloasBlockBodyFieldRoots(blockBody, fieldRoots); err != nil {
 			return nil, err
 		}
+	}
+
+	if blockBody.version >= version.Eip8321 {
+		copy(fieldRoots[13], blockBody.hashChainReveal[:])
+		root, err := ssz.MerkleizeListSSZProgressive(blockBody.randaoCommitmentRegistrations)
+		if err != nil {
+			return nil, err
+		}
+		copy(fieldRoots[14], root[:])
 	}
 	return fieldRoots, nil
 }
@@ -467,6 +478,9 @@ func progressiveContainerActiveFields(v int, container progressiveContainerType)
 		}
 		return af, nil
 	case beaconBlockBodyProgressiveContainer:
+		if v >= version.Eip8321 {
+			return append(append([]bool{}, hezeBlockBodyActiveFields...), true, true), nil
+		}
 		if v >= version.Heze {
 			return hezeBlockBodyActiveFields, nil
 		}

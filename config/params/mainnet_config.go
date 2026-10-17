@@ -207,30 +207,36 @@ var mainnetBeaconConfig = &BeaconChainConfig{
 	DomainInclusionListCommittee:      bytesutil.Uint32ToBytes4(0x10000000),
 
 	// Prysm constants.
-	GenesisValidatorsRoot:          [32]byte{75, 54, 61, 185, 78, 40, 97, 32, 215, 110, 185, 5, 52, 15, 221, 78, 84, 191, 233, 240, 107, 243, 63, 246, 207, 90, 210, 127, 81, 27, 254, 149},
-	GweiPerEth:                     1000000000,
-	BLSSecretKeyLength:             32,
-	BLSPubkeyLength:                48,
-	DefaultBufferSize:              10000,
-	WithdrawalPrivkeyFileName:      "/shardwithdrawalkey",
-	ValidatorPrivkeyFileName:       "/validatorprivatekey",
-	RPCSyncCheck:                   1,
-	EmptySignature:                 [96]byte{},
-	DefaultPageSize:                250,
-	MaxPeersToSync:                 15,
-	SlotsPerArchivedPoint:          2048,
-	GenesisCountdownInterval:       time.Minute,
-	ConfigName:                     MainnetName,
-	PresetBase:                     "mainnet",
-	BeaconStateFieldCount:          21,
-	BeaconStateAltairFieldCount:    24,
-	BeaconStateBellatrixFieldCount: 25,
-	BeaconStateCapellaFieldCount:   28,
-	BeaconStateDenebFieldCount:     28,
-	BeaconStateElectraFieldCount:   37,
-	BeaconStateFuluFieldCount:      38,
-	BeaconStateGloasFieldCount:     46,
-	BeaconStateHezeFieldCount:      42,
+	GenesisValidatorsRoot:              [32]byte{75, 54, 61, 185, 78, 40, 97, 32, 215, 110, 185, 5, 52, 15, 221, 78, 84, 191, 233, 240, 107, 243, 63, 246, 207, 90, 210, 127, 81, 27, 254, 149},
+	GweiPerEth:                         1000000000,
+	BLSSecretKeyLength:                 32,
+	BLSPubkeyLength:                    48,
+	DefaultBufferSize:                  10000,
+	WithdrawalPrivkeyFileName:          "/shardwithdrawalkey",
+	ValidatorPrivkeyFileName:           "/validatorprivatekey",
+	RPCSyncCheck:                       1,
+	EmptySignature:                     [96]byte{},
+	DefaultPageSize:                    250,
+	MaxPeersToSync:                     15,
+	SlotsPerArchivedPoint:              2048,
+	GenesisCountdownInterval:           time.Minute,
+	ConfigName:                         MainnetName,
+	PresetBase:                         "mainnet",
+	BeaconStateFieldCount:              21,
+	BeaconStateAltairFieldCount:        24,
+	BeaconStateBellatrixFieldCount:     25,
+	BeaconStateCapellaFieldCount:       28,
+	BeaconStateDenebFieldCount:         28,
+	BeaconStateElectraFieldCount:       37,
+	BeaconStateFuluFieldCount:          38,
+	BeaconStateGloasFieldCount:         46,
+	BeaconStateHezeFieldCount:          42,
+	BeaconStateEip8321FieldCount:       44,
+	DomainRandaoCommitmentRegistration: [4]byte{0x11, 0, 0, 0},
+	CommitmentRegistrationDelay:        3,
+	MaxRandaoCommitmentRegistrations:   128,
+	Eip8321ForkVersion:                 []byte{0xe8, 0x32, 0x10, 0},
+	Eip8321ForkEpoch:                   math.MaxUint64,
 
 	// Slasher related values.
 	WeakSubjectivityPeriod:          54000,
@@ -445,6 +451,7 @@ func FillTestVersions(c *BeaconChainConfig, b byte) {
 	c.FuluForkVersion = make([]byte, fieldparams.VersionLength)
 	c.GloasForkVersion = make([]byte, fieldparams.VersionLength)
 	c.HezeForkVersion = make([]byte, fieldparams.VersionLength)
+	c.Eip8321ForkVersion = []byte{0xe8, 0x32, 0x10, b}
 
 	c.GenesisForkVersion[fieldparams.VersionLength-1] = b
 	c.AltairForkVersion[fieldparams.VersionLength-1] = b

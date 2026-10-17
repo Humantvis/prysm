@@ -88,8 +88,12 @@ func NewSignedBeaconBlock(i any) (interfaces.SignedBeaconBlock, error) {
 		return initSignedBlockFromProtoGloas(b)
 	case *eth.GenericSignedBeaconBlock_Heze:
 		return initSignedBlockFromProtoHeze(b.Heze)
+	case *eth.GenericSignedBeaconBlock_Eip8321:
+		return initSignedBlockFromProtoEip8321(b.Eip8321)
 	case *eth.SignedBeaconBlockHeze:
 		return initSignedBlockFromProtoHeze(b)
+	case *eth.SignedBeaconBlockEip8321:
+		return initSignedBlockFromProtoEip8321(b)
 	default:
 		return nil, errors.Wrapf(ErrUnsupportedSignedBeaconBlock, "unable to create block from type %T", i)
 	}
@@ -152,8 +156,12 @@ func NewBeaconBlock(i any) (interfaces.ReadOnlyBeaconBlock, error) {
 		return initBlockFromProtoGloas(b)
 	case *eth.GenericBeaconBlock_Heze:
 		return initBlockFromProtoHeze(b.Heze)
+	case *eth.GenericBeaconBlock_Eip8321:
+		return initBlockFromProtoEip8321(b.Eip8321)
 	case *eth.BeaconBlockHeze:
 		return initBlockFromProtoHeze(b)
+	case *eth.BeaconBlockEip8321:
+		return initBlockFromProtoEip8321(b)
 	default:
 		return nil, errors.Wrapf(errUnsupportedBeaconBlock, "unable to create block from type %T", i)
 	}
@@ -188,6 +196,8 @@ func NewBeaconBlockBody(i any) (interfaces.ReadOnlyBeaconBlockBody, error) {
 		return initBlockBodyFromProtoGloas(b)
 	case *eth.BeaconBlockBodyHeze:
 		return initBlockBodyFromProtoHeze(b)
+	case *eth.BeaconBlockBodyEip8321:
+		return initBlockBodyFromProtoEip8321(b)
 	default:
 		return nil, errors.Wrapf(errUnsupportedBeaconBlockBody, "unable to create block body from type %T", i)
 	}
@@ -292,6 +302,12 @@ func BuildSignedBeaconBlock(blk interfaces.ReadOnlyBeaconBlock, signature []byte
 			return nil, errIncorrectBlockVersion
 		}
 		return NewSignedBeaconBlock(&eth.SignedBeaconBlockHeze{Block: pb, Signature: signature})
+	case version.Eip8321:
+		pb, ok := pb.(*eth.BeaconBlockEip8321)
+		if !ok {
+			return nil, errIncorrectBlockVersion
+		}
+		return NewSignedBeaconBlock(&eth.SignedBeaconBlockEip8321{Block: pb, Signature: signature})
 	default:
 		return nil, errUnsupportedBeaconBlock
 	}
@@ -661,7 +677,7 @@ func BuildSignedBeaconBlockFromExecutionPayload(blk interfaces.ReadOnlySignedBea
 			},
 			Signature: sig[:],
 		}
-	case version.Gloas, version.Heze:
+	case version.Gloas, version.Heze, version.Eip8321:
 		return nil, errors.Wrap(errUnsupportedBeaconBlock, "post-gloas blocks are not supported in this function")
 	default:
 		return nil, errors.New("Block not of known type")

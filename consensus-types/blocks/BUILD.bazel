@@ -3,6 +3,7 @@ load("@prysm//tools/go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = [
+        "eip8321.go",
         "execution.go",
         "execution_payload_envelope.go",
         "factory.go",
@@ -53,6 +54,7 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = [
+        "eip8321_test.go",
         "execution_payload_envelope_test.go",
         "execution_test.go",
         "factory_test.go",

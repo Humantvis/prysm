@@ -3,7 +3,6 @@ package blocks
 import (
 	"testing"
 
-	bitfield "github.com/OffchainLabs/go-bitfield"
 	ssz "github.com/OffchainLabs/methodical-ssz/ssz"
 
 	fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
@@ -689,7 +688,7 @@ func hydrateBeaconBlockBodyAltair() *eth.BeaconBlockBodyAltair {
 			BlockHash:   make([]byte, fieldparams.RootLength),
 		},
 		SyncAggregate: &eth.SyncAggregate{
-			SyncCommitteeBits:      make([]byte, 64),
+			SyncCommitteeBits:      make([]byte, fieldparams.SyncAggregateSyncCommitteeBytesLength),
 			SyncCommitteeSignature: make([]byte, fieldparams.BLSSignatureLength),
 		},
 	}
@@ -704,7 +703,7 @@ func hydrateBeaconBlockBodyBellatrix() *eth.BeaconBlockBodyBellatrix {
 			BlockHash:   make([]byte, fieldparams.RootLength),
 		},
 		SyncAggregate: &eth.SyncAggregate{
-			SyncCommitteeBits:      make([]byte, 64),
+			SyncCommitteeBits:      make([]byte, fieldparams.SyncAggregateSyncCommitteeBytesLength),
 			SyncCommitteeSignature: make([]byte, fieldparams.BLSSignatureLength),
 		},
 		ExecutionPayload: &pb.ExecutionPayload{
@@ -776,7 +775,7 @@ func hydrateBeaconBlockBodyHeze() *eth.BeaconBlockBodyHeze {
 }
 
 func hydrateBeaconBlockBodyGloas() *eth.BeaconBlockBodyGloas {
-	bits := bitfield.NewBitvector512()
+	bits := eth.NewPayloadAttestationAggregationBits()
 	bits.SetBitAt(0, true)
 
 	return &eth.BeaconBlockBodyGloas{

@@ -118,8 +118,10 @@ var (
 	gloasProgressiveSchema *ProgressiveStateSchema
 	gloasFields            []types.FieldIndex
 
-	hezeProgressiveSchema *ProgressiveStateSchema
-	hezeFields            []types.FieldIndex
+	hezeProgressiveSchema    *ProgressiveStateSchema
+	hezeFields               []types.FieldIndex
+	eip8321ProgressiveSchema *ProgressiveStateSchema
+	eip8321Fields            []types.FieldIndex
 )
 
 func init() {
@@ -158,6 +160,11 @@ func init() {
 		panic(err)
 	}
 	hezeFields = hezeProgressiveSchema.fields
+	eip8321ProgressiveSchema, err = newProgressiveStateFieldsSchema(slices.Concat(altairFields, []types.FieldIndex{types.LatestBlockHash}, withdrawalAndHistoricalSummaryFields, electraAdditionalFields, []types.FieldIndex{types.ProposerLookahead}, gloasAdditionalFields, []types.FieldIndex{types.RandaoCommitments, types.PendingRandaoCommitments}), []types.FieldIndex{types.Eth1Data, types.Eth1DataVotes, types.Eth1DepositIndex, types.DepositRequestsStartIndex}, params.BeaconConfig().BeaconStateEip8321FieldCount)
+	if err != nil {
+		panic(err)
+	}
+	eip8321Fields = eip8321ProgressiveSchema.fields
 }
 
 func ProgressiveStateSchemaForVersion(v int) (*ProgressiveStateSchema, bool) {
@@ -166,6 +173,8 @@ func ProgressiveStateSchemaForVersion(v int) (*ProgressiveStateSchema, bool) {
 		return gloasProgressiveSchema, true
 	case version.Heze:
 		return hezeProgressiveSchema, true
+	case version.Eip8321:
+		return eip8321ProgressiveSchema, true
 	default:
 		return nil, false
 	}

@@ -118,6 +118,14 @@ ssz_methodical(
 )
 
 ssz_methodical(
+    name = "methodical_eip8321",
+    deps = [":beacon_state_go"],
+    config_file = "eip8321.yaml",
+    override_package_name = "eth",
+    out = "eip8321.ssz.go",
+)
+
+ssz_methodical(
     name = "methodical_non_core",
     deps = [":go_proto"],
     config_file = "non-core.yaml",
@@ -180,6 +188,7 @@ go_library(
         "eip_7521.go",
         "gloas.go",
         "heze.go",
+        "eip8321.go",
         "log.go",
         "p2p_messages.go",
         "sync_committee_mainnet.go",
@@ -194,6 +203,7 @@ go_library(
         ":methodical_fulu", # keep
         ":methodical_gloas", # keep
         ":methodical_heze", # keep
+        ":methodical_eip8321", # keep
         ":methodical_non_core", # keep
         ":methodical_phase0", # keep
         "validator.go",
@@ -243,6 +253,7 @@ ssz_proto_files(
         "gloas.proto",
 	"gloas_builder_api.proto",
         "heze.proto",
+        "eip8321.proto",
         "light_client.proto",
         "partial_data_columns.proto",
         "sync_committee.proto",

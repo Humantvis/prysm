@@ -40,8 +40,6 @@ var placeholderFields = []string{
 	"EIP8025_FORK_VERSION",
 	"EIP8198_FORK_EPOCH",
 	"EIP8198_FORK_VERSION",
-	"EIP8321_FORK_EPOCH",
-	"EIP8321_FORK_VERSION",
 	"EPOCHS_PER_SHUFFLING_PHASE",
 	"FIELD_ELEMENTS_PER_CELL",       // Configured as a constant in config/fieldparams/mainnet.go
 	"FIELD_ELEMENTS_PER_EXT_BLOB",   // Configured in proto/ssz_proto_library.bzl

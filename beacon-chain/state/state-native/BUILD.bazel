@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "beacon_state.go",
         "doc.go",
+        "eip8321.go",
         "error.go",
         "fields.go",
         "getters_attestation.go",
@@ -96,6 +97,7 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = [
+        "eip8321_test.go",
         "fields_test.go",
         "getters_attestation_test.go",
         "getters_block_test.go",
