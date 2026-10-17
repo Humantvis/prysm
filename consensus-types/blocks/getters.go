@@ -85,6 +85,8 @@ func (b *SignedBeaconBlock) Copy() (interfaces.SignedBeaconBlock, error) {
 		return initSignedBlockFromProtoGloas(eth.CopySignedBeaconBlockGloas(pb.(*eth.SignedBeaconBlockGloas)))
 	case version.Heze:
 		return initSignedBlockFromProtoHeze(eth.CopySignedBeaconBlockHeze(pb.(*eth.SignedBeaconBlockHeze)))
+	case version.Eip8321:
+		return initSignedBlockFromProtoEip8321(eth.CopySignedBeaconBlockEip8321(pb.(*eth.SignedBeaconBlockEip8321)))
 	default:
 		return nil, errIncorrectBlockVersion
 	}
@@ -169,6 +171,10 @@ func (b *SignedBeaconBlock) PbGenericBlock() (*eth.GenericSignedBeaconBlock, err
 	case version.Heze:
 		return &eth.GenericSignedBeaconBlock{
 			Block: &eth.GenericSignedBeaconBlock_Heze{Heze: pb.(*eth.SignedBeaconBlockHeze)},
+		}, nil
+	case version.Eip8321:
+		return &eth.GenericSignedBeaconBlock{
+			Block: &eth.GenericSignedBeaconBlock_Eip8321{Eip8321: pb.(*eth.SignedBeaconBlockEip8321)},
 		}, nil
 	default:
 		return nil, errIncorrectBlockVersion
@@ -454,6 +460,8 @@ func (b *SignedBeaconBlock) MarshalSSZ() ([]byte, error) {
 		return pb.(*eth.SignedBeaconBlockGloas).MarshalSSZ()
 	case version.Heze:
 		return pb.(*eth.SignedBeaconBlockHeze).MarshalSSZ()
+	case version.Eip8321:
+		return pb.(*eth.SignedBeaconBlockEip8321).MarshalSSZ()
 	default:
 		return []byte{}, errIncorrectBlockVersion
 	}
@@ -500,6 +508,8 @@ func (b *SignedBeaconBlock) MarshalSSZTo(dst []byte) ([]byte, error) {
 		return pb.(*eth.SignedBeaconBlockGloas).MarshalSSZTo(dst)
 	case version.Heze:
 		return pb.(*eth.SignedBeaconBlockHeze).MarshalSSZTo(dst)
+	case version.Eip8321:
+		return pb.(*eth.SignedBeaconBlockEip8321).MarshalSSZTo(dst)
 	default:
 		return []byte{}, errIncorrectBlockVersion
 	}
@@ -551,6 +561,8 @@ func (b *SignedBeaconBlock) SizeSSZ() int {
 		return pb.(*eth.SignedBeaconBlockGloas).SizeSSZ()
 	case version.Heze:
 		return pb.(*eth.SignedBeaconBlockHeze).SizeSSZ()
+	case version.Eip8321:
+		return pb.(*eth.SignedBeaconBlockEip8321).SizeSSZ()
 	default:
 		panic(incorrectBlockVersion)
 	}
@@ -711,6 +723,16 @@ func (b *SignedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
+	case version.Eip8321:
+		pb := &eth.SignedBeaconBlockEip8321{}
+		err := pb.UnmarshalSSZ(buf)
+		if err != nil {
+			return err
+		}
+		newBlock, err = initSignedBlockFromProtoEip8321(pb)
+		if err != nil {
+			return err
+		}
 	default:
 		return errIncorrectBlockVersion
 	}
@@ -800,6 +822,9 @@ func (b *BeaconBlock) HashTreeRoot() ([field_params.RootLength]byte, error) {
 	case version.Heze:
 		return pb.(*eth.BeaconBlockHeze).HashTreeRoot()
 
+	case version.Eip8321:
+		return pb.(*eth.BeaconBlockEip8321).HashTreeRoot()
+
 	default:
 		return [field_params.RootLength]byte{}, errIncorrectBlockVersion
 	}
@@ -845,6 +870,8 @@ func (b *BeaconBlock) HashTreeRootWith(h *ssz.Hasher) error {
 		return pb.(*eth.BeaconBlockGloas).HashTreeRootWith(h)
 	case version.Heze:
 		return pb.(*eth.BeaconBlockHeze).HashTreeRootWith(h)
+	case version.Eip8321:
+		return pb.(*eth.BeaconBlockEip8321).HashTreeRootWith(h)
 	default:
 		return errIncorrectBlockVersion
 	}
@@ -891,6 +918,8 @@ func (b *BeaconBlock) MarshalSSZ() ([]byte, error) {
 		return pb.(*eth.BeaconBlockGloas).MarshalSSZ()
 	case version.Heze:
 		return pb.(*eth.BeaconBlockHeze).MarshalSSZ()
+	case version.Eip8321:
+		return pb.(*eth.BeaconBlockEip8321).MarshalSSZ()
 	default:
 		return []byte{}, errIncorrectBlockVersion
 	}
@@ -937,6 +966,8 @@ func (b *BeaconBlock) MarshalSSZTo(dst []byte) ([]byte, error) {
 		return pb.(*eth.BeaconBlockGloas).MarshalSSZTo(dst)
 	case version.Heze:
 		return pb.(*eth.BeaconBlockHeze).MarshalSSZTo(dst)
+	case version.Eip8321:
+		return pb.(*eth.BeaconBlockEip8321).MarshalSSZTo(dst)
 	default:
 		return []byte{}, errIncorrectBlockVersion
 	}
@@ -988,6 +1019,8 @@ func (b *BeaconBlock) SizeSSZ() int {
 		return pb.(*eth.BeaconBlockGloas).SizeSSZ()
 	case version.Heze:
 		return pb.(*eth.BeaconBlockHeze).SizeSSZ()
+	case version.Eip8321:
+		return pb.(*eth.BeaconBlockEip8321).SizeSSZ()
 	default:
 		panic(incorrectBodyVersion)
 	}
@@ -1148,6 +1181,16 @@ func (b *BeaconBlock) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
+	case version.Eip8321:
+		pb := &eth.BeaconBlockEip8321{}
+		if err := pb.UnmarshalSSZ(buf); err != nil {
+			return err
+		}
+		var err error
+		newBlock, err = initBlockFromProtoEip8321(pb)
+		if err != nil {
+			return err
+		}
 	default:
 		return errIncorrectBlockVersion
 	}
@@ -1195,6 +1238,8 @@ func (b *BeaconBlock) AsSignRequestObject() (validatorpb.SignRequestObject, erro
 		return &validatorpb.SignRequest_BlockGloas{BlockGloas: pb.(*eth.BeaconBlockGloas)}, nil
 	case version.Heze:
 		return &validatorpb.SignRequest_BlockHeze{BlockHeze: pb.(*eth.BeaconBlockHeze)}, nil
+	case version.Eip8321:
+		return &validatorpb.SignRequest_BlockEip8321{BlockEip8321: pb.(*eth.BeaconBlockEip8321)}, nil
 	default:
 		return nil, errIncorrectBlockVersion
 	}
@@ -1426,6 +1471,8 @@ func (b *BeaconBlockBody) HashTreeRoot() ([field_params.RootLength]byte, error) 
 		return pb.(*eth.BeaconBlockBodyGloas).HashTreeRoot()
 	case version.Heze:
 		return pb.(*eth.BeaconBlockBodyHeze).HashTreeRoot()
+	case version.Eip8321:
+		return pb.(*eth.BeaconBlockBodyEip8321).HashTreeRoot()
 	default:
 		return [field_params.RootLength]byte{}, errIncorrectBodyVersion
 	}

@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package ethereum.eth.v1alpha1;
+
+import "proto/engine/v1/execution_engine.proto";
+import "proto/engine/v1/gloas.proto";
+import "proto/eth/ext/options.proto";
+import "proto/prysm/v1alpha1/attestation.proto";
+import "proto/prysm/v1alpha1/withdrawals.proto";
+import "proto/prysm/v1alpha1/beacon_core_types.proto";
+import "proto/prysm/v1alpha1/gloas.proto";
+import "proto/prysm/v1alpha1/heze.proto";
+
+option go_package = "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1;eth";
+
+message RandaoCommitmentRegistration {
+  uint64 validator_index = 1 [
+    (ethereum.eth.ext.cast_type) =
+        "github.com/OffchainLabs/prysm/v7/consensus-types/primitives.ValidatorIndex"
+  ];
+  bytes commitment = 2 [ (ethereum.eth.ext.ssz_size) = "32" ];
+}
+
+message SignedRandaoCommitmentRegistration {
+  RandaoCommitmentRegistration message = 1;
+  bytes signature = 2 [ (ethereum.eth.ext.ssz_size) = "96" ];
+}
+
+message PendingRandaoCommitment {
+  uint64 validator_index = 1 [
+    (ethereum.eth.ext.cast_type) =
+        "github.com/OffchainLabs/prysm/v7/consensus-types/primitives.ValidatorIndex"
+  ];
+  bytes commitment = 2 [ (ethereum.eth.ext.ssz_size) = "32" ];
+  uint64 activation_epoch = 3 [
+    (ethereum.eth.ext.cast_type) =
+        "github.com/OffchainLabs/prysm/v7/consensus-types/primitives.Epoch"
+  ];
+}
+
+message BeaconBlockEip8321 {
+  uint64 slot = 1 [
+    (ethereum.eth.ext.cast_type) =
+        "github.com/OffchainLabs/prysm/v7/consensus-types/primitives.Slot"
+  ];
+  uint64 proposer_index = 2 [ (ethereum.eth.ext.cast_type) =
+                                  "github.com/OffchainLabs/prysm/v7/"
+                                  "consensus-types/primitives.ValidatorIndex" ];
+  bytes parent_root = 3 [ (ethereum.eth.ext.ssz_size) = "32" ];
+  bytes state_root = 4 [ (ethereum.eth.ext.ssz_size) = "32" ];
+  BeaconBlockBodyEip8321 body = 5;
+}
+
+message BeaconBlockBodyEip8321 {
+  bytes randao_reveal = 1 [ (ethereum.eth.ext.ssz_size) = "96" ];
+  bytes graffiti = 2 [ (ethereum.eth.ext.ssz_size) = "32" ];
+  repeated ProposerSlashing proposer_slashings = 3
+      [ (ethereum.eth.ext.ssz_max) = "16" ];
+  repeated AttesterSlashingGloas attester_slashings = 4
+      [ (ethereum.eth.ext.ssz_max) = "1" ];
+  repeated AttestationGloas attestations = 5
+      [ (ethereum.eth.ext.ssz_max) = "8" ];
+  repeated SignedVoluntaryExit voluntary_exits = 6
+      [ (ethereum.eth.ext.ssz_max) = "16" ];
+  SyncAggregate sync_aggregate = 7;
+  repeated SignedBLSToExecutionChange bls_to_execution_changes = 8
+      [ (ethereum.eth.ext.ssz_max) = "16" ];
+  SignedExecutionPayloadBidHeze signed_execution_payload_bid = 9;
+  repeated PayloadAttestation payload_attestations = 10
+      [ (ethereum.eth.ext.ssz_max) = "payload_attestation.size" ];
+  ethereum.engine.v1.ExecutionRequestsGloas parent_execution_requests = 11;
+  bytes hash_chain_reveal = 12 [(ethereum.eth.ext.ssz_size) = "32"];
+  // Decoder allocation guard; processing enforces MAX_RANDAO_COMMITMENT_REGISTRATIONS.
+  repeated SignedRandaoCommitmentRegistration randao_commitment_registrations = 13 [(ethereum.eth.ext.ssz_max) = "1099511627776"];
+}
+
+message SignedBeaconBlockEip8321 {
+  BeaconBlockEip8321 block = 1;
+  bytes signature = 2 [ (ethereum.eth.ext.ssz_size) = "96" ];
+}

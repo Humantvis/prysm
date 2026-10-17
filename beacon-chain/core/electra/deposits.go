@@ -521,6 +521,11 @@ func AddValidatorToRegistry(beaconState state.BeaconState, pubKey []byte, withdr
 			return err
 		}
 	}
+	if beaconState.Version() >= version.Eip8321 {
+		if err := beaconState.AppendRandaoCommitment([32]byte{}); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -21,6 +21,23 @@ import (
 // to make sure that previous test case has already been completed and check can be run.
 var testOverrideBeaconConfigExecuted bool
 
+func TestEip8321Config(t *testing.T) {
+	for _, cfg := range []*params.BeaconChainConfig{params.MainnetConfig(), params.MinimalSpecConfig()} {
+		t.Run(cfg.PresetBase, func(t *testing.T) {
+			require.Equal(t, [4]byte{0x11, 0, 0, 0}, cfg.DomainRandaoCommitmentRegistration)
+			require.Equal(t, primitives.Epoch(3), cfg.CommitmentRegistrationDelay)
+			require.Equal(t, uint64(128), cfg.MaxRandaoCommitmentRegistrations)
+			require.Equal(t, 44, cfg.BeaconStateEip8321FieldCount)
+			require.Equal(t, 42, cfg.BeaconStateHezeFieldCount)
+			require.Equal(t, cfg.FarFutureEpoch, cfg.Eip8321ForkEpoch)
+			cfg.InitializeForkSchedule()
+			require.Equal(t, cfg.Eip8321ForkEpoch, cfg.ForkVersionSchedule[[4]byte(cfg.Eip8321ForkVersion)])
+		})
+	}
+	require.DeepEqual(t, []byte{0xe8, 0x32, 0x10, 0}, params.MainnetConfig().Eip8321ForkVersion)
+	require.DeepEqual(t, []byte{0xe8, 0x32, 0x10, 1}, params.MinimalSpecConfig().Eip8321ForkVersion)
+}
+
 func TestConfig_OverrideBeaconConfig(t *testing.T) {
 	// Ensure that param modifications are safe.
 	params.SetupTestConfigCleanup(t)

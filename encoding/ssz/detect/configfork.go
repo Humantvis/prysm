@@ -92,6 +92,8 @@ func FromForkVersion(cv [fieldparams.VersionLength]byte) (*VersionedUnmarshaler,
 		fork = version.Gloas
 	case bytesutil.ToBytes4(cfg.HezeForkVersion):
 		fork = version.Heze
+	case bytesutil.ToBytes4(cfg.Eip8321ForkVersion):
+		fork = version.Eip8321
 	default:
 		return nil, errors.Wrapf(ErrForkNotFound, "version=%#x", cv)
 	}
@@ -201,6 +203,18 @@ func (cf *VersionedUnmarshaler) UnmarshalBeaconState(marshaled []byte) (s state.
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to init state trie from state, detected fork=%s", forkName)
 		}
+	case version.Eip8321:
+		st := &ethpb.BeaconStateEip8321{}
+
+		err = st.UnmarshalSSZ(marshaled)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to unmarshal state, detected fork=%s", forkName)
+		}
+
+		s, err = state_native.InitializeFromProtoUnsafeEip8321(st)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to init state trie from state, detected fork=%s", forkName)
+		}
 	default:
 		return nil, fmt.Errorf("unable to initialize BeaconState for fork version=%s", forkName)
 	}
@@ -257,6 +271,8 @@ func (cf *VersionedUnmarshaler) UnmarshalBeaconBlock(marshaled []byte) (interfac
 		blk = &ethpb.SignedBeaconBlockGloas{}
 	case version.Heze:
 		blk = &ethpb.SignedBeaconBlockHeze{}
+	case version.Eip8321:
+		blk = &ethpb.SignedBeaconBlockEip8321{}
 	default:
 		forkName := version.String(cf.Fork)
 		return nil, fmt.Errorf("unable to initialize ReadOnlyBeaconBlock for fork version=%s at slot=%d", forkName, slot)
@@ -300,6 +316,8 @@ func (cf *VersionedUnmarshaler) UnmarshalBlindedBeaconBlock(marshaled []byte) (i
 		blk = &ethpb.SignedBeaconBlockGloas{}
 	case version.Heze:
 		blk = &ethpb.SignedBeaconBlockHeze{}
+	case version.Eip8321:
+		blk = &ethpb.SignedBeaconBlockEip8321{}
 	default:
 		forkName := version.String(cf.Fork)
 		return nil, fmt.Errorf("unable to initialize ReadOnlyBeaconBlock for fork version=%s at slot=%d", forkName, slot)

@@ -2,6 +2,7 @@ package hash_test
 
 import (
 	"encoding/hex"
+	"strconv"
 	"testing"
 
 	"github.com/OffchainLabs/prysm/v7/crypto/bls"
@@ -13,6 +14,30 @@ import (
 	"github.com/OffchainLabs/prysm/v7/testing/require"
 	fuzz "github.com/google/gofuzz"
 )
+
+func TestBlake3(t *testing.T) {
+	// Official vectors: https://github.com/BLAKE3-team/BLAKE3/blob/master/test_vectors/test_vectors.json.
+	cases := []struct {
+		length int
+		want   string
+	}{
+		{0, "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"},
+		{1, "2d3adedff11b61f14c886e35afa036736dcd87a74d27b5c1510225d0f592e213"},
+		{64, "4eed7141ea4a5cd4b788606bd23f46e212af9cacebacdc7d1f4c6dc7f2511b98"},
+		{1024, "42214739f095a406f3fc83deb889744ac00df831c10daa55189b5d121c855af7"},
+		{1025, "d00278ae47eb27b34faecf67b4fe263f82d5412916c1ffd97c8cb7fb814b8444"},
+	}
+	for _, tc := range cases {
+		t.Run(strconv.Itoa(tc.length), func(t *testing.T) {
+			input := make([]byte, tc.length)
+			for i := range input {
+				input[i] = byte(i % 251)
+			}
+			got := hash.Blake3(input)
+			assert.Equal(t, tc.want, hex.EncodeToString(got[:]))
+		})
+	}
+}
 
 func TestHash(t *testing.T) {
 	hashOf0 := [32]byte{110, 52, 11, 156, 255, 179, 122, 152, 156, 165, 68, 230, 187, 120, 10, 44, 120, 144, 29, 63, 179, 55, 56, 118, 133, 17, 163, 6, 23, 175, 160, 29}

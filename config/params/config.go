@@ -31,6 +31,12 @@ const BuilderBidTolerance = 600 * time.Millisecond
 
 // BeaconChainConfig contains constant configs for node to participate in beacon chain.
 type BeaconChainConfig struct {
+	DomainRandaoCommitmentRegistration [4]byte          `yaml:"DOMAIN_RANDAO_COMMITMENT_REGISTRATION"` // BLS domain for one-time commitment registrations.
+	CommitmentRegistrationDelay        primitives.Epoch `yaml:"COMMITMENT_REGISTRATION_DELAY"`         // Activation delay; must be at least MinSeedLookahead + 2.
+	MaxRandaoCommitmentRegistrations   uint64           `yaml:"MAX_RANDAO_COMMITMENT_REGISTRATIONS"`   // Maximum commitment registrations per block.
+	BeaconStateEip8321FieldCount       int
+	Eip8321ForkVersion                 []byte           `yaml:"EIP8321_FORK_VERSION"`
+	Eip8321ForkEpoch                   primitives.Epoch `yaml:"EIP8321_FORK_EPOCH"`
 	// Constants (non-configurable)
 	GenesisSlot              primitives.Slot  `yaml:"GENESIS_SLOT"`                // GenesisSlot represents the first canonical slot number of the beacon chain.
 	GenesisEpoch             primitives.Epoch `yaml:"GENESIS_EPOCH"`               // GenesisEpoch represents the first canonical epoch number of the beacon chain.
@@ -409,6 +415,7 @@ func (b *BeaconChainConfig) VersionToForkEpochMap() map[int]primitives.Epoch {
 		version.Fulu:      b.FuluForkEpoch,
 		version.Gloas:     b.GloasForkEpoch,
 		version.Heze:      b.HezeForkEpoch,
+		version.Eip8321:   b.Eip8321ForkEpoch,
 	}
 }
 
@@ -697,6 +704,7 @@ func initForkSchedule(b *BeaconChainConfig) *NetworkSchedule {
 		{Epoch: b.FuluForkEpoch, isFork: true, ForkVersion: to4(b.FuluForkVersion), VersionEnum: version.Fulu},
 		{Epoch: b.GloasForkEpoch, isFork: true, ForkVersion: to4(b.GloasForkVersion), VersionEnum: version.Gloas},
 		{Epoch: b.HezeForkEpoch, isFork: true, ForkVersion: to4(b.HezeForkVersion), VersionEnum: version.Heze},
+		{Epoch: b.Eip8321ForkEpoch, isFork: true, ForkVersion: to4(b.Eip8321ForkVersion), VersionEnum: version.Eip8321},
 	})
 }
 
@@ -723,6 +731,7 @@ func configForkSchedule(b *BeaconChainConfig) map[[fieldparams.VersionLength]byt
 	fvs[bytesutil.ToBytes4(b.FuluForkVersion)] = b.FuluForkEpoch
 	fvs[bytesutil.ToBytes4(b.GloasForkVersion)] = b.GloasForkEpoch
 	fvs[bytesutil.ToBytes4(b.HezeForkVersion)] = b.HezeForkEpoch
+	fvs[bytesutil.ToBytes4(b.Eip8321ForkVersion)] = b.Eip8321ForkEpoch
 	return fvs
 }
 
@@ -748,6 +757,7 @@ func ConfigForkVersions(b *BeaconChainConfig) map[[fieldparams.VersionLength]byt
 		bytesutil.ToBytes4(b.FuluForkVersion):      version.Fulu,
 		bytesutil.ToBytes4(b.GloasForkVersion):     version.Gloas,
 		bytesutil.ToBytes4(b.HezeForkVersion):      version.Heze,
+		bytesutil.ToBytes4(b.Eip8321ForkVersion):   version.Eip8321,
 	}
 }
 

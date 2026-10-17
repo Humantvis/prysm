@@ -123,7 +123,15 @@ func ContainerRootProgressive(fieldRoots [][32]byte, activeFields []bool) ([32]b
 		return [32]byte{}, fmt.Errorf("active fields count %d does not match field roots count %d", activeCount, len(fieldRoots))
 	}
 
-	body := MerkleizeProgressiveChunks(fieldRoots)
+	leaves := make([][32]byte, len(activeFields))
+	field := 0
+	for position, active := range activeFields {
+		if active {
+			leaves[position] = fieldRoots[field]
+			field++
+		}
+	}
+	body := MerkleizeProgressiveChunks(leaves)
 	return MixInActiveFields(body, activeFields)
 }
 
