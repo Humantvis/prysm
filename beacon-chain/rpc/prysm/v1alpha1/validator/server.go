@@ -87,6 +87,7 @@ type Server struct {
 	ExecutionEngineCaller            execution.EngineCaller
 	BlockBuilder                     builder.BlockBuilder
 	BLSChangesPool                   blstoexec.PoolManager
+	RandaoCommitmentPool 			 randaocommitments.PoolManager
 	ClockWaiter                      startup.ClockWaiter
 	CoreService                      *core.Service
 	AttestationStateFetcher          blockchain.AttestationStateFetcher

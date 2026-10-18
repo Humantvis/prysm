@@ -300,6 +300,26 @@ func (c *grpcValidatorClient) SubmitSignedExecutionPayloadBid(ctx context.Contex
 	return c.getClient().SubmitSignedExecutionPayloadBid(ctx, in)
 }
 
+// SubmitRandaoCommitmentRegistration submits a signed randao commitment
+// registration to the beacon node. The BN validates it, inserts it into the
+// operations pool, and broadcasts it to the randao_commitment_registration
+// gossip topic.
+func (c *grpcValidatorClient) SubmitRandaoCommitmentRegistration(
+	ctx context.Context,
+	in *ethpb.SignedRandaoCommitmentRegistration,
+) (*empty.Empty, error) {
+	return c.getClient().SubmitRandaoCommitmentRegistration(ctx, in)
+}
+
+// RandaoCommitment returns the validator's current on-chain randao commitment,
+// or 32 zero bytes if unregistered.
+func (c *grpcValidatorClient) RandaoCommitment(
+	ctx context.Context,
+	in *ethpb.ValidatorIndexRequest,
+) (*ethpb.RandaoCommitmentResponse, error) {
+	return c.getClient().RandaoCommitment(ctx, in)
+}
+
 func (c *grpcValidatorClient) SubscribeCommitteeSubnets(ctx context.Context, in *ethpb.CommitteeSubnetsSubscribeRequest) (*empty.Empty, error) {
 	return c.getClient().SubscribeCommitteeSubnets(ctx, in)
 }

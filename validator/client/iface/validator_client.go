@@ -159,6 +159,12 @@ type ValidatorClient interface {
 	SubmitSignedProposerPreferences(ctx context.Context, in *ethpb.SubmitSignedProposerPreferencesRequest) (*empty.Empty, error)
 	SubmitBuilderPreferences(ctx context.Context, in *ethpb.SubmitBuilderPreferencesRequest) (*empty.Empty, error)
 	SubmitSignedExecutionPayloadBid(ctx context.Context, in *ethpb.SignedExecutionPayloadBid) (*empty.Empty, error)
+	// EIP-8321: submit a signed randao commitment registration to the beacon
+	// node, which validates it, inserts it into the pool, and broadcasts it.
+	SubmitRandaoCommitmentRegistration(ctx context.Context, in *ethpb.SignedRandaoCommitmentRegistration) (*empty.Empty, error)
+	// EIP-8321: returns the validator's current on-chain randao commitment, or
+	// 32 zero bytes if unregistered.
+	RandaoCommitment(ctx context.Context, in *ethpb.ValidatorIndexRequest) (*ethpb.RandaoCommitmentResponse, error)
 	StartEventStream(ctx context.Context, topics []string, eventsChannel chan<- *event.Event)
 	EventStreamIsRunning() bool
 	AggregatedSelections(ctx context.Context, selections []BeaconCommitteeSelection) ([]BeaconCommitteeSelection, error)

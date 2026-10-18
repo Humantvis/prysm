@@ -42,6 +42,8 @@ go_library(
         "status.go",
         "sync_committee.go",
         "unblinder.go",
+        "proposer_randao_commitment.go",
+        "randao_commitment.go"
     ],
     importpath = "github.com/OffchainLabs/prysm/v7/beacon-chain/rpc/prysm/v1alpha1/validator",
     visibility = ["//beacon-chain:__subpackages__"],

@@ -13,6 +13,7 @@ import (
 	lightclient "github.com/OffchainLabs/prysm/v7/beacon-chain/light-client"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/attestations"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/blstoexec"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/randaocommitments"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/slashings"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/voluntaryexits"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/p2p"
@@ -150,6 +151,14 @@ func WithSlashingPool(p slashings.PoolManager) Option {
 func WithBLSToExecPool(p blstoexec.PoolManager) Option {
 	return func(s *Service) error {
 		s.cfg.BLSToExecPool = p
+		return nil
+	}
+}
+
+// WithRandaoCommitmentPool to keep track of randao commitments.
+func WithRandaoCommitmentPool(p randaocommitments.PoolManager) Option {
+	return func(s *Service) error {
+		s.cfg.RandaoCommitmentPool = p
 		return nil
 	}
 }

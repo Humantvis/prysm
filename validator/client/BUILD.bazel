@@ -34,6 +34,7 @@ go_library(
         "validator.go",
         "wait_for_activation.go",
         "wait_helpers.go",
+        "randao_chain.go",
     ],
     importpath = "github.com/OffchainLabs/prysm/v7/validator/client",
     visibility = [
