@@ -8,9 +8,6 @@ import (
 	"github.com/OffchainLabs/prysm/v7/crypto/bls/common"
 )
 
-// Test names follow the official EIP-8321 test vectors in
-// reftests/<preset>/eip8321/operations/randao/pyspec_tests/.
-
 func testChain(t *testing.T) [][32]byte {
 	t.Helper()
 	chain, err := eip8321.ComputeHashChain(seed(0x11), 8)
@@ -51,8 +48,6 @@ func TestVerifyHashChainReveal(t *testing.T) {
 	}
 }
 
-// hash_chain_reveal_consumes_one_link_per_block: after each accepted reveal the
-// reveal becomes the new commitment, so the next block must reveal one link deeper.
 func TestVerifyHashChainReveal_ConsumesOneLinkPerBlock(t *testing.T) {
 	chain := testChain(t)
 	infinity := common.InfiniteSignature[:]
@@ -61,27 +56,23 @@ func TestVerifyHashChainReveal_ConsumesOneLinkPerBlock(t *testing.T) {
 		if err := eip8321.VerifyHashChainReveal(chain[i], infinity, commitment); err != nil {
 			t.Fatalf("reveal of link %d: %v", i, err)
 		}
-		// Replaying the same reveal after it was consumed must fail.
 		if err := eip8321.VerifyHashChainReveal(chain[i], infinity, chain[i]); !errors.Is(err, eip8321.ErrHashChainRevealMismatch) {
 			t.Fatalf("replay of link %d: got %v", i, err)
 		}
-		commitment = chain[i] // what process_randao stores
+		commitment = chain[i]
 	}
 }
 
 func TestVerifyNoHashChainReveal(t *testing.T) {
-	// unregistered_proposer_uses_bls_reveal
 	if err := eip8321.VerifyNoHashChainReveal([32]byte{}); err != nil {
 		t.Fatalf("empty reveal must pass, got %v", err)
 	}
-	// invalid_unregistered_proposer_with_hash_chain_reveal
 	if err := eip8321.VerifyNoHashChainReveal(seed(0x01)); !errors.Is(err, eip8321.ErrUnexpectedHashChainReveal) {
 		t.Fatalf("got %v", err)
 	}
 }
 
 func TestHashChainRandaoMix_KnownAnswer(t *testing.T) {
-	// blake3(0xaa*32 + c1), computed with the Python blake3 package.
 	mix := make([]byte, 32)
 	for i := range mix {
 		mix[i] = 0xaa
