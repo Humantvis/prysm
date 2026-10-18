@@ -12,6 +12,7 @@ import (
 
 var ErrTooManyRegistrations = errors.New("too many randao commitment registrations in block")
 
+// Process all registrations
 func ProcessRandaoCommitmentRegistrations(st state.BeaconState, registrations []*ethpb.SignedRandaoCommitmentRegistration) error {
 	if uint64(len(registrations)) > params.BeaconConfig().MaxRandaoCommitmentRegistrations {
 		return ErrTooManyRegistrations
@@ -25,6 +26,7 @@ func ProcessRandaoCommitmentRegistrations(st state.BeaconState, registrations []
 }
 
 func ProcessRandaoCommitmentRegistration(st state.BeaconState, signed *ethpb.SignedRandaoCommitmentRegistration) error {
+	// Check nil
 	if signed == nil || signed.Message == nil {
 		return errors.New("nil randao commitment registration")
 	}
@@ -32,6 +34,8 @@ func ProcessRandaoCommitmentRegistration(st state.BeaconState, signed *ethpb.Sig
 	if len(registration.Commitment) != 32 {
 		return errors.New("randao commitment must be 32 bytes")
 	}
+
+	// Get values for checks
 	var commitment [32]byte
 	copy(commitment[:], registration.Commitment)
 	index := registration.ValidatorIndex
@@ -57,6 +61,7 @@ func ProcessRandaoCommitmentRegistration(st state.BeaconState, signed *ethpb.Sig
 		return err
 	}
 
+	// BLS signature
 	cfg := params.BeaconConfig()
 	domain, err := signing.ComputeDomain(cfg.DomainRandaoCommitmentRegistration, cfg.GenesisForkVersion, st.GenesisValidatorsRoot())
 	if err != nil {
@@ -67,6 +72,7 @@ func ProcessRandaoCommitmentRegistration(st state.BeaconState, signed *ethpb.Sig
 		return errors.Wrap(err, "could not verify randao commitment registration signature")
 	}
 
+	// Add to queue
 	activationEpoch := RegistrationActivationEpoch(uint64(time.CurrentEpoch(st)), uint64(cfg.CommitmentRegistrationDelay))
 	return st.AppendPendingRandaoCommitment(&ethpb.PendingRandaoCommitment{
 		ValidatorIndex:  index,
