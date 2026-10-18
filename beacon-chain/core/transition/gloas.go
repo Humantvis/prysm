@@ -105,6 +105,7 @@ func gloasOperations(ctx context.Context, st state.BeaconState, block interfaces
 		return nil, errors.Wrap(ErrProcessPayloadAttestationsFailed, err.Error())
 	}
 	// [New in EIP8321]
+	// Randao commitment registrations
 	if st.Version() >= version.Eip8321 {
 		registrations, err := bb.RandaoCommitmentRegistrations()
 		if err != nil {

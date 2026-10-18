@@ -27,8 +27,6 @@ func seed(b byte) [32]byte {
 	return s
 }
 
-// Known-answer values computed with the Python `blake3` package, the same
-// library the consensus-specs use to generate the official test vectors.
 func TestHashChainStep_KnownAnswer(t *testing.T) {
 	c1 := eip8321.HashChainStep(seed(0x01))
 	want := mustHex32(t, "b16fcaaa6cf97c506a9ca4c4e04e766cec67d5e1bd308152be59d082bb52f187")
@@ -65,22 +63,18 @@ func TestVerifyHashChainLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Every link is the preimage of the next one.
 	for i := 1; i < len(chain); i++ {
 		if !eip8321.VerifyHashChainLink(chain[i-1], chain[i]) {
 			t.Fatalf("link %d does not verify against %d", i-1, i)
 		}
 	}
 	commitment := chain[len(chain)-1]
-	// Skipping a link must fail.
 	if eip8321.VerifyHashChainLink(chain[len(chain)-3], commitment) {
 		t.Fatal("skipped link must not verify")
 	}
-	// Revealing the commitment itself must fail.
 	if eip8321.VerifyHashChainLink(commitment, commitment) {
 		t.Fatal("commitment is not its own preimage")
 	}
-	// The zero value must fail.
 	if eip8321.VerifyHashChainLink([32]byte{}, commitment) {
 		t.Fatal("zero reveal must not verify")
 	}
