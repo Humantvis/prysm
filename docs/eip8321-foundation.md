@@ -53,6 +53,46 @@ networking, and validator production flows belong to the remaining team work.
 Those paths must use the EIP-8321 version and protobuf types rather than adding
 fields to Heze itself. This foundation does not claim full EIP interoperability.
 
+### Validator RPC integration
+
+The validator gRPC service also defines:
+
+- `SubmitRandaoCommitmentRegistration(SignedRandaoCommitmentRegistration) -> google.protobuf.Empty`
+- `RandaoCommitment(ValidatorIndexRequest) -> RandaoCommitmentResponse`
+
+The query uses `ValidatorIndexRequest.public_key`; the response contains a
+32-byte `commitment`. A zero commitment denotes an unregistered validator.
+`SignRequest.randao_commitment` uses field 131; `block_eip8321` retains field 130.
+`BlockRequest.hash_chain_reveal` remains field 8.
+
+The server embeds the generated unimplemented service so this schema change
+builds before the validator implementation is merged. Its new RPCs return
+`Unimplemented` until the concrete methods from the validator integration are
+present. Merge the `.proto` sources first and regenerate code with `make gen`
+instead of resolving generated protobuf and mock conflicts by hand.
+
+Validation on 2026-10-19: mainnet protobuf and EIP-8321 package tests passed,
+minimal protobuf tests passed, and all four binaries built with Bazel. The new
+tests exercise both RPCs over in-memory gRPC and serialize the signing payload.
+
+An isolated integration of `eip8321-heze/matas` at
+`73f8f7f2c2c14b792fc8cecf2288dc2981b9f05a` with shared base `efbbc5391`
+and these protobuf changes still fails outside the protobuf layer:
+
+- `validator/client/randao_chain.go:62`: `rand.Bytes` does not exist in the
+  imported project package. Use a supported secure random source.
+- `beacon-chain/sync/subscriber_randao_commitment_registration.go`: the `log`
+  import conflicts with the package logger, and `operation` is unused.
+- `beacon-chain/operations/randaocommitments/pool.go:91`: the `uintcast`
+  analyzer rejects an unchecked `uint64` to `int` conversion.
+
+Separately, `validator/randao_commitment.go` under the beacon RPC package calls
+`Broadcast(ctx, topic, req)`, while `p2p.Broadcaster.Broadcast` accepts only
+`(context.Context, proto.Message)`. The topic is selected by message type.
+These are validator integration follow-ups; this validation does not claim that
+the complete Matas branch builds. Regenerate its interface mocks after merging
+the shared base and protobuf changes, then rerun the build and tests.
+
 ## Generate and run reference vectors
 
 Use Linux or WSL with the consensus-specs prerequisites (Python 3.13, uv, make):

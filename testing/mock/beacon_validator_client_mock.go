@@ -584,6 +584,26 @@ func (mr *MockBeaconNodeValidatorClientMockRecorder) PublishExecutionPayloadEnve
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishExecutionPayloadEnvelopeV2", reflect.TypeOf((*MockBeaconNodeValidatorClient)(nil).PublishExecutionPayloadEnvelopeV2), varargs...)
 }
 
+// RandaoCommitment mocks base method.
+func (m *MockBeaconNodeValidatorClient) RandaoCommitment(ctx context.Context, in *eth.ValidatorIndexRequest, opts ...grpc.CallOption) (*eth.RandaoCommitmentResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RandaoCommitment", varargs...)
+	ret0, _ := ret[0].(*eth.RandaoCommitmentResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RandaoCommitment indicates an expected call of RandaoCommitment.
+func (mr *MockBeaconNodeValidatorClientMockRecorder) RandaoCommitment(ctx, in any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RandaoCommitment", reflect.TypeOf((*MockBeaconNodeValidatorClient)(nil).RandaoCommitment), varargs...)
+}
+
 // StreamBlocksAltair mocks base method.
 func (m *MockBeaconNodeValidatorClient) StreamBlocksAltair(ctx context.Context, in *eth.StreamBlocksRequest, opts ...grpc.CallOption) (eth.BeaconNodeValidator_StreamBlocksAltairClient, error) {
 	m.ctrl.T.Helper()
@@ -722,6 +742,26 @@ func (mr *MockBeaconNodeValidatorClientMockRecorder) SubmitPayloadAttestation(ct
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubmitPayloadAttestation", reflect.TypeOf((*MockBeaconNodeValidatorClient)(nil).SubmitPayloadAttestation), varargs...)
+}
+
+// SubmitRandaoCommitmentRegistration mocks base method.
+func (m *MockBeaconNodeValidatorClient) SubmitRandaoCommitmentRegistration(ctx context.Context, in *eth.SignedRandaoCommitmentRegistration, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SubmitRandaoCommitmentRegistration", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SubmitRandaoCommitmentRegistration indicates an expected call of SubmitRandaoCommitmentRegistration.
+func (mr *MockBeaconNodeValidatorClientMockRecorder) SubmitRandaoCommitmentRegistration(ctx, in any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubmitRandaoCommitmentRegistration", reflect.TypeOf((*MockBeaconNodeValidatorClient)(nil).SubmitRandaoCommitmentRegistration), varargs...)
 }
 
 // SubmitSignedAggregateSelectionProof mocks base method.

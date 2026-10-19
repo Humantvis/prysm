@@ -27,6 +27,7 @@ import "proto/prysm/v1alpha1/sync_committee.proto";
 import "proto/prysm/v1alpha1/attestation.proto";
 import "proto/prysm/v1alpha1/gloas.proto";
 import "proto/prysm/v1alpha1/gloas_builder_api.proto";
+import "proto/prysm/v1alpha1/eip8321.proto";
 
 option csharp_namespace = "Ethereum.Eth.V1";
 option go_package = "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1;eth";
@@ -588,6 +589,18 @@ service BeaconNodeValidator {
       returns (stream StreamExecutionPayloadAvailableResponse) {
     option deprecated = true;
   }
+
+  // Submits a signed EIP-8321 RANDAO commitment registration.
+  rpc SubmitRandaoCommitmentRegistration(SignedRandaoCommitmentRegistration)
+      returns (google.protobuf.Empty) {}
+
+  // Retrieves the active RANDAO commitment for a validator public key.
+  rpc RandaoCommitment(ValidatorIndexRequest) returns (RandaoCommitmentResponse) {}
+}
+
+// Active commitment; 32 zero bytes indicate an unregistered validator.
+message RandaoCommitmentResponse {
+  bytes commitment = 1 [(ethereum.eth.ext.ssz_size) = "32"];
 }
 
 // SyncMessageBlockRootResponse for beacon chain validator to retrieve and
