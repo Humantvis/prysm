@@ -301,6 +301,24 @@ func (c *beaconApiValidatorClient) SubmitSignedExecutionPayloadBid(_ context.Con
 	return new(empty.Empty), nil
 }
 
+// SubmitRandaoCommitmentRegistration is not supported over REST yet. EIP-8321
+// submission currently requires the gRPC beacon node endpoint.
+func (c *beaconApiValidatorClient) SubmitRandaoCommitmentRegistration(
+	ctx context.Context,
+	in *ethpb.SignedRandaoCommitmentRegistration,
+) (*empty.Empty, error) {
+	return nil, iface.ErrNotSupported
+}
+
+// RandaoCommitment is not supported over REST yet. EIP-8321 proposal requires
+// the gRPC beacon node endpoint.
+func (c *beaconApiValidatorClient) RandaoCommitment(
+	ctx context.Context,
+	in *ethpb.ValidatorIndexRequest,
+) (*ethpb.RandaoCommitmentResponse, error) {
+	return nil, iface.ErrNotSupported
+}
+
 func (c *beaconApiValidatorClient) SubscribeCommitteeSubnets(ctx context.Context, in *ethpb.CommitteeSubnetsSubscribeRequest) (*empty.Empty, error) {
 	ctx, span := trace.StartSpan(ctx, "beacon-api.SubscribeCommitteeSubnets")
 	defer span.End()

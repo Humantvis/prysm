@@ -555,6 +555,15 @@ func (s *Service) saveOrphanedOperations(ctx context.Context, orphanedRoot [32]b
 				s.cfg.BLSToExecPool.InsertBLSToExecChange(c)
 			}
 		}
+		if orphanedBlk.Version() >= version.Eip8321 {
+		regs, err := orphanedBlk.Block().Body().RandaoCommitmentRegistrations()
+		if err != nil {
+			return errors.Wrap(err, "could not get RandaoCommitmentRegistrations")
+		}
+		for _, r := range regs {
+			s.cfg.RandaoCommitmentPool.InsertRandaoCommitment(r)
+		}
+		}
 		parentRoot := orphanedBlk.Block().ParentRoot()
 		orphanedRoot = bytesutil.ToBytes32(parentRoot[:])
 	}

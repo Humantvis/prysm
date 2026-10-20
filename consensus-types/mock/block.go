@@ -296,6 +296,14 @@ func (b *BeaconBlockBody) Version() int {
 	panic("implement me")
 }
 
+func (b *BeaconBlockBody) HashChainReveal() ([32]byte, error) {
+	panic("implement me")
+}
+
+func (b *BeaconBlockBody) RandaoCommitmentRegistrations() ([]*eth.SignedRandaoCommitmentRegistration, error) {
+	panic("implement me")
+}
+
 var _ interfaces.ReadOnlySignedBeaconBlock = &SignedBeaconBlock{}
 var _ interfaces.ReadOnlyBeaconBlock = &BeaconBlock{}
 var _ interfaces.ReadOnlyBeaconBlockBody = &BeaconBlockBody{}

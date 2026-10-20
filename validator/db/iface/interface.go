@@ -82,4 +82,9 @@ type ValidatorDB interface {
 
 	// EIP-3076 slashing protection related methods
 	ImportStandardProtectionJSON(ctx context.Context, r io.Reader) error
+
+	// Randao hash chain (EIP-8321) related methods.
+	SaveRandaoHashChain(ctx context.Context, pubKey [fieldparams.BLSPubkeyLength]byte, seed [32]byte, length uint64) error
+	RandaoHashChain(ctx context.Context, pubKey [fieldparams.BLSPubkeyLength]byte) (seed [32]byte, length uint64, ok bool, err error)
+	DeleteRandaoHashChain(ctx context.Context, pubKey [fieldparams.BLSPubkeyLength]byte) error
 }

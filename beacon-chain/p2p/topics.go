@@ -57,6 +57,8 @@ const (
 	// GossipInclusionListMessage is the name for the inclusion list message type.
 	GossipInclusionListMessage = "inclusion_list"
 
+	GossipRandaoCommitmentRegistrationMessage = "randao_commitment_registration"
+
 	// Topic Formats
 	//
 	// AttestationSubnetTopicFormat is the topic format for the attestation subnet.
@@ -95,6 +97,8 @@ const (
 	SignedProposerPreferencesTopicFormat = GossipProtocolAndDigest + GossipSignedProposerPreferencesMessage
 	// InclusionListTopicFormat is the topic format for inclusion lists.
 	InclusionListTopicFormat = GossipProtocolAndDigest + GossipInclusionListMessage
+
+	RandaoCommitmentRegistrationTopicFormat = GossipProtocolAndDigest + GossipRandaoCommitmentRegistrationMessage
 )
 
 // topic is a struct representing a single gossipsub topic.
@@ -162,6 +166,7 @@ func (s *Service) allTopics() []topic {
 	// bellatrix: no special topics; electra: blobs topics handled all together
 	genesis, altair, capella := cfg.GenesisEpoch, cfg.AltairForkEpoch, cfg.CapellaForkEpoch
 	deneb, fulu, gloas, heze, future := cfg.DenebForkEpoch, cfg.FuluForkEpoch, cfg.GloasForkEpoch, cfg.HezeForkEpoch, cfg.FarFutureEpoch
+	eip8321 := cfg.Eip8321ForkEpoch
 	// Templates are starter topics - they have a placeholder digest and the subnet is set to the maximum value
 	// for the subnet (see how this is used in allSubnetsBelow). These are not directly returned by the method,
 	// they are copied and modified for each digest where they apply based on the start and end epochs.
@@ -183,6 +188,7 @@ func (s *Service) allTopics() []topic {
 		newTopic(gloas, future, empty, GossipExecutionPayloadBidMessage),
 		newTopic(gloas, future, empty, GossipSignedProposerPreferencesMessage),
 		newTopic(heze, future, empty, GossipInclusionListMessage),
+		newTopic(eip8321, future, empty, GossipRandaoCommitmentRegistrationMessage),
 	}
 	last := params.GetNetworkScheduleEntry(genesis)
 	schedule := []params.NetworkScheduleEntry{last}

@@ -726,3 +726,33 @@ func (mr *MockValidatorClientMockRecorder) WaitForChainStart(ctx, in any) *gomoc
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitForChainStart", reflect.TypeOf((*MockValidatorClient)(nil).WaitForChainStart), ctx, in)
 }
+
+// RandaoCommitment mocks base method.
+func (m *MockValidatorClient) RandaoCommitment(ctx context.Context, in *eth.ValidatorIndexRequest) (*eth.RandaoCommitmentResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RandaoCommitment", ctx, in)
+	ret0, _ := ret[0].(*eth.RandaoCommitmentResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RandaoCommitment indicates an expected call of RandaoCommitment.
+func (mr *MockValidatorClientMockRecorder) RandaoCommitment(ctx, in any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RandaoCommitment", reflect.TypeOf((*MockValidatorClient)(nil).RandaoCommitment), ctx, in)
+}
+
+// SubmitRandaoCommitmentRegistration mocks base method.
+func (m *MockValidatorClient) SubmitRandaoCommitmentRegistration(ctx context.Context, in *eth.SignedRandaoCommitmentRegistration) (*empty.Empty, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SubmitRandaoCommitmentRegistration", ctx, in)
+	ret0, _ := ret[0].(*empty.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SubmitRandaoCommitmentRegistration indicates an expected call of SubmitRandaoCommitmentRegistration.
+func (mr *MockValidatorClientMockRecorder) SubmitRandaoCommitmentRegistration(ctx, in any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubmitRandaoCommitmentRegistration", reflect.TypeOf((*MockValidatorClient)(nil).SubmitRandaoCommitmentRegistration), ctx, in)
+}

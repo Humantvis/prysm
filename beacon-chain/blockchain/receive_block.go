@@ -491,6 +491,11 @@ func (s *Service) prunePostBlockOperationPools(ctx context.Context, blk interfac
 		return errors.Wrap(err, "could not process BLSToExecutionChanges")
 	}
 
+	// Mark block randao commitment registrations as included so they leave the pool.
+	if err := s.markIncludedBlockRandaoCommitmentRegistrations(blk.Block()); err != nil {
+		return errors.Wrap(err, "could not process RandaoCommitmentRegistrations")
+	}
+
 	// Mark slashings as seen so we don't include same ones in future blocks.
 	for _, as := range blk.Block().Body().AttesterSlashings() {
 		s.cfg.SlashingPool.MarkIncludedAttesterSlashing(as)
@@ -512,6 +517,20 @@ func (s *Service) markIncludedBlockBLSToExecChanges(headBlock interfaces.ReadOnl
 	}
 	for _, change := range changes {
 		s.cfg.BLSToExecPool.MarkIncluded(change)
+	}
+	return nil
+}
+
+func (s *Service) markIncludedBlockRandaoCommitmentRegistrations(headBlock interfaces.ReadOnlyBeaconBlock) error {
+	if headBlock.Version() < version.Eip8321 {
+		return nil
+	}
+	regs, err := headBlock.Body().RandaoCommitmentRegistrations()
+	if err != nil {
+		return errors.Wrap(err, "could not get RandaoCommitmentRegistrations")
+	}
+	for _, reg := range regs {
+		s.cfg.RandaoCommitmentPool.MarkIncluded(reg)
 	}
 	return nil
 }

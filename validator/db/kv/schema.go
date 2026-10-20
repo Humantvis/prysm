@@ -41,6 +41,9 @@ var (
 	// ProposerSettings stores the encoded proposer settings file
 	proposerSettingsBucket = []byte("proposer-settings-bucket")
 	proposerSettingsKey    = []byte("proposer-settings")
+
+	// Randao hash chain (EIP-8321): <pubkey> --> {seed || big-endian uint64 length}
+	randaoHashChainBucket = []byte("randao-hash-chain-bucket")
 )
 
 // Attestations:
@@ -55,3 +58,9 @@ var (
 // Proposals:
 // ----------
 // proposal-history-bucket-interchange -> <pubkey> --> <slot> --> <signing root>
+
+// EIP-8321 randao hash chain:
+// ---------------------------
+// randao-hash-chain-bucket --> <pubkey> --> <32-byte seed || 8-byte big-endian length>
+// No chain, no position stored: the chain is recomputable from (seed, length)
+// and the on-chain commitment is the position.
