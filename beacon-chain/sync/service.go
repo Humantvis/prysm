@@ -25,6 +25,7 @@ import (
 	lightClient "github.com/OffchainLabs/prysm/v7/beacon-chain/light-client"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/attestations"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/blstoexec"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/randaocommitments"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/payloadattestation"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/slashings"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/synccommittee"
@@ -104,6 +105,7 @@ type config struct {
 	slashingPool            slashings.PoolManager
 	syncCommsPool           synccommittee.Pool
 	blsToExecPool           blstoexec.PoolManager
+	randaoCommitmentPool    randaocommitments.PoolManager
 	chain                   blockchainService
 	initialSync             Checker
 	blockNotifier           blockfeed.Notifier

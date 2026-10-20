@@ -62,6 +62,10 @@ const (
 
 	// InclusionListReceived is sent after a signed inclusion list passes the inclusion list gossip rules, from gossip or the API.
 	InclusionListReceived = 17
+
+	// RandaoCommitmentRegistrationReceived is sent after a randao commitment
+    // registration is received via RPC or gossip and inserted into the pool.
+    RandaoCommitmentRegistrationReceived = 18
 )
 
 // UnAggregatedAttReceivedData is the data sent with UnaggregatedAttReceived events.
@@ -91,6 +95,12 @@ type SyncCommitteeContributionReceivedData struct {
 // BLSToExecutionChangeReceivedData is the data sent with BLSToExecutionChangeReceived events.
 type BLSToExecutionChangeReceivedData struct {
 	Change *ethpb.SignedBLSToExecutionChange
+}
+
+// RandaoCommitmentRegistrationReceivedData is the data sent with
+// RandaoCommitmentRegistrationReceived events.
+type RandaoCommitmentRegistrationReceivedData struct {
+    Registration *ethpb.SignedRandaoCommitmentRegistration
 }
 
 // BlobSidecarReceivedData is the data sent with BlobSidecarReceived events.

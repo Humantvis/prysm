@@ -397,6 +397,19 @@ func (s *Service) registerSubscribers(nse params.NetworkScheduleEntry) bool {
 			)
 		})
 	}
+
+	// New gossip topic in EIP-8321 (EIP-8321 RANDAO commitment registration).
+    if params.BeaconConfig().Eip8321ForkEpoch <= nse.Epoch {
+        s.spawn(func() {
+            s.subscribe(
+                p2p.RandaoCommitmentRegistrationTopicFormat,
+                s.validateRandaoCommitmentRegistration,
+                s.randaoCommitmentRegistrationSubscriber,
+                nse,
+            )
+        })
+    }
+	
 	return true
 }
 

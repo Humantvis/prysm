@@ -12,6 +12,7 @@ import (
 	lightClient "github.com/OffchainLabs/prysm/v7/beacon-chain/light-client"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/attestations"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/blstoexec"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/randaocommitments"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/payloadattestation"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/slashings"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/synccommittee"
@@ -87,6 +88,14 @@ func WithBlsToExecPool(blsToExecPool blstoexec.PoolManager) Option {
 		s.cfg.blsToExecPool = blsToExecPool
 		return nil
 	}
+}
+
+// WithRandaoCommitmentPool sets the RANDAO commitment pool for the sync service.
+func WithRandaoCommitmentPool(pool randaocommitments.PoolManager) Option {
+    return func(s *Service) error {
+        s.cfg.randaoCommitmentPool = pool
+        return nil
+    }
 }
 
 func WithChainService(chain blockchainService) Option {

@@ -97,14 +97,51 @@ func (vs *Server) GetBeaconBlock(ctx context.Context, req *ethpb.BlockRequest) (
 	} else {
 		sBlk.SetGraffiti(req.Graffiti)
 	}
-	sBlk.SetRandaoReveal(req.RandaoReveal)
+
+	if len(req.HashChainReveal) > 0 {
+		if sBlk.Version() < version.Eip8321 {
+			return nil, status.Error(codes.InvalidArgument, "hash chain reveal supplied for a pre-EIP-8321 block")
+		}
+		if len(req.HashChainReveal) != 32 {
+			return nil, status.Error(codes.InvalidArgument, "hash chain reveal must be 32 bytes")
+		}
+		emptySig := [96]byte{0xC0}
+		sBlk.SetRandaoReveal(emptySig[:])
+		if err := sBlk.SetHashChainReveal(req.HashChainReveal); err != nil {
+			return nil, status.Errorf(codes.Internal, "could not set hash chain reveal: %v", err)
+		}
+	} else {
+		sBlk.SetRandaoReveal(req.RandaoReveal)
+		if sBlk.Version() >= version.Eip8321 {
+			if err := sBlk.SetHashChainReveal(make([]byte, 32)); err != nil {
+				return nil, status.Errorf(codes.Internal, "could not set hash chain reveal: %v", err)
+			}
+		}
+	}
+
 	sBlk.SetParentRoot(parentRoot[:])
 
 	// Set proposer index.
 	idx, err := helpers.BeaconProposerIndex(ctx, head)
-	if err != nil {
-		return nil, fmt.Errorf("could not calculate proposer index %w", err)
+		if err != nil {
+			return nil, fmt.Errorf("could not calculate proposer index %w", err)
+		}
+
+		if sBlk.Version() >= version.Eip8321 {
+		current, err := head.RandaoCommitmentAtIndex(idx)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Could not read randao commitment: %v", err)
+		}
+		active := current != ([32]byte{})
+		hasReveal := len(req.HashChainReveal) > 0
+		if active && !hasReveal {
+			return nil, status.Error(codes.InvalidArgument, "proposer has an active randao commitment; hash chain reveal required")
+		}
+		if !active && hasReveal {
+			return nil, status.Error(codes.InvalidArgument, "proposer has no active randao commitment; use the BLS randao reveal")
+		}
 	}
+
 	sBlk.SetProposerIndex(idx)
 
 	builderBoostFactor := defaultBuilderBoostFactor

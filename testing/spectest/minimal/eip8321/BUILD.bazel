@@ -7,8 +7,8 @@ go_test(
     srcs = ["eip8321_test.go"],
     eth_network = "minimal",
     tags = [
-        "minimal",
         "manual",
+        "minimal",
         "spectest",
     ],
     deps = [

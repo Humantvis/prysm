@@ -18,6 +18,7 @@ go_library(
         "proposer_protection.go",
         "proposer_settings.go",
         "prune_attester_protection.go",
+        "randao_hash_chain.go",
         "schema.go",
     ],
     importpath = "github.com/OffchainLabs/prysm/v7/validator/db/kv",

@@ -53,6 +53,17 @@ type (
 		GenesisValidatorsRoot *string                              `yaml:"genesisValidatorsRoot,omitempty"`
 		ProposerSettings      *validatorpb.ProposerSettingsPayload `yaml:"proposerSettings,omitempty"`
 		Graffiti              *Graffiti                            `yaml:"graffiti,omitempty"`
+		// EIP-8321: randao hash chain seed + length, keyed by hex(pubkey).
+		// Recomputable from (seed, length) — the chain and the on-chain position
+		// are never stored.
+		RandaoHashChains map[string]*RandaoHashChainEntry `yaml:"randaoHashChains,omitempty"`
+	}
+
+	// RandaoHashChainEntry stores the seed and length for one validator's
+	// EIP-8321 randao hash chain. See iface.ValidatorDB.SaveRandaoHashChain.
+	RandaoHashChainEntry struct {
+		Seed   string `yaml:"seed"`
+		Length uint64 `yaml:"length"`
 	}
 
 	// ValidatorSlashingProtection contains the latest signed block slot, the last signed attestation.

@@ -39,6 +39,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/operations/randaocommitments"
 )
 
 // Server defines a server implementation of the gRPC Validator service,
@@ -46,6 +47,7 @@ import (
 // and committees in which particular validators need to perform their responsibilities,
 // and more.
 type Server struct {
+	ethpb.UnimplementedBeaconNodeValidatorServer
 	Ctx                              context.Context
 	PayloadIDCache                   *cache.PayloadIDCache
 	ProposerPreferencesCache         *cache.ProposerPreferencesCache
@@ -87,6 +89,7 @@ type Server struct {
 	ExecutionEngineCaller            execution.EngineCaller
 	BlockBuilder                     builder.BlockBuilder
 	BLSChangesPool                   blstoexec.PoolManager
+	RandaoCommitmentPool 			 randaocommitments.PoolManager
 	ClockWaiter                      startup.ClockWaiter
 	CoreService                      *core.Service
 	AttestationStateFetcher          blockchain.AttestationStateFetcher

@@ -28,6 +28,7 @@ func (vs *Server) buildBlockGloas(ctx context.Context, sBlk interfaces.SignedBea
 	var wg sync.WaitGroup
 	wg.Go(func() {
 		vs.setPreGloasConsensusFields(ctx, sBlk, head)
+		vs.setRandaoCommitmentRegistrations(sBlk, head)
 		if err := sBlk.SetPayloadAttestations(vs.getPayloadAttestations(ctx, head, sBlk.Block().ParentRoot())); err != nil {
 			log.WithError(err).Error("Could not set payload attestations")
 		}

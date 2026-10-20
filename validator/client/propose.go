@@ -16,6 +16,7 @@ import (
 	"github.com/OffchainLabs/prysm/v7/consensus-types/interfaces"
 	"github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
 	"github.com/OffchainLabs/prysm/v7/crypto/bls"
+	"github.com/OffchainLabs/prysm/v7/crypto/bls/common"
 	"github.com/OffchainLabs/prysm/v7/crypto/rand"
 	"github.com/OffchainLabs/prysm/v7/encoding/bytesutil"
 	"github.com/OffchainLabs/prysm/v7/io/logs"
@@ -61,15 +62,43 @@ func (v *validator) ProposeBlock(ctx context.Context, slot primitives.Slot, pubK
 	span.SetAttributes(trace.StringAttribute("validator", fmtKey))
 	log := log.WithField("pubkey", fmt.Sprintf("%#x", bytesutil.Trunc(pubKey[:])))
 
-	// Sign randao reveal, it's used to request block from beacon node
+	// Determine the reveal type BEFORE requesting the block: a registered
+	// proposer must not produce a BLS reveal — the node expects the infinity
+	// signature plus a hash-chain reveal instead.
 	epoch := primitives.Epoch(slot / params.BeaconConfig().SlotsPerEpoch)
-	randaoReveal, err := v.signRandaoReveal(ctx, pubKey, epoch, slot)
+	var randaoReveal, hashChainReveal []byte
+	reveal, registered, err := v.nextHashChainRevealFor(ctx, pubKey)
 	if err != nil {
-		log.WithError(err).Error("Failed to sign randao reveal")
+		// Fail closed: no BLS fallback. A BLS reveal from a registered
+		// proposer makes the block invalid; a missed slot costs less.
+		switch {
+		case errors.Is(err, ErrHashChainExhausted):
+			log.WithError(err).Error("Randao hash chain exhausted; validator must exit and re-register")
+		case errors.Is(err, ErrCommitmentMismatch):
+			log.WithError(err).Error("On-chain commitment not found in local chain; seed store wrong or corrupted")
+		default:
+			log.WithError(err).Error("Failed to determine hash-chain registration")
+		}
 		if v.emitAccountMetrics {
 			ValidatorProposeFailVec.WithLabelValues(fmtKey).Inc()
 		}
 		return
+	}
+	if registered {
+		hashChainReveal = reveal[:]
+		// EIP-8321: a registered proposer submits the G2 point at infinity as
+		// randao_reveal, paired with the hash-chain reveal. common.InfiniteSignature
+		// is [96]byte{0xC0} — already in the marshal form, no .Marshal() needed.
+		randaoReveal = common.InfiniteSignature[:]
+	} else {
+		randaoReveal, err = v.signRandaoReveal(ctx, pubKey, epoch, slot)
+		if err != nil {
+			log.WithError(err).Error("Failed to sign randao reveal")
+			if v.emitAccountMetrics {
+				ValidatorProposeFailVec.WithLabelValues(fmtKey).Inc()
+			}
+			return
+		}
 	}
 
 	g, err := v.Graffiti(ctx, pubKey)
@@ -92,10 +121,11 @@ func (v *validator) ProposeBlock(ctx context.Context, slot primitives.Slot, pubK
 
 	// Request block from beacon node
 	b, err := v.validatorClient.BeaconBlock(ctx, &ethpb.BlockRequest{
-		Slot:          slot,
-		RandaoReveal:  randaoReveal,
-		Graffiti:      g,
-		BuilderConfig: v.builderConfigForSlot(ctx, pubKey, slot),
+		Slot:            slot,
+		RandaoReveal:    randaoReveal,
+		HashChainReveal: hashChainReveal,
+		Graffiti:        g,
+		BuilderConfig:   v.builderConfigForSlot(ctx, pubKey, slot),
 	})
 	if err != nil {
 		log.WithField("slot", slot).WithError(err).Error("Failed to request block from beacon node")
