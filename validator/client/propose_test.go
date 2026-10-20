@@ -137,6 +137,7 @@ func TestProposeBlock_DomainDataFailed(t *testing.T) {
 				gomock.Any(), // epoch
 			).Return(nil /*response*/, errors.New("uh oh"))
 
+			expectUnregisteredRandao(m.validatorClient, pubKey)
 			validator.ProposeBlock(t.Context(), 1, pubKey)
 			require.LogsContain(t, hook, "Failed to sign randao reveal")
 		})
@@ -157,6 +158,7 @@ func TestProposeBlock_DomainDataIsNil(t *testing.T) {
 				gomock.Any(), // epoch
 			).Return(nil /*response*/, nil)
 
+			expectUnregisteredRandao(m.validatorClient, pubKey)
 			validator.ProposeBlock(t.Context(), 1, pubKey)
 			require.LogsContain(t, hook, domainDataErr)
 		})
@@ -207,6 +209,7 @@ func TestProposeBlock_RequestBlockFailed(t *testing.T) {
 					gomock.AssignableToTypeOf(&ethpb.BlockRequest{}),
 				).Return(nil /*response*/, errors.New("uh oh"))
 
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				validator.ProposeBlock(t.Context(), tt.slot, pubKey)
 				require.LogsContain(t, hook, "Failed to request block from beacon node")
 			})
@@ -273,6 +276,7 @@ func TestProposeBlock_ProposeBlockFailed(t *testing.T) {
 					gomock.AssignableToTypeOf(&ethpb.GenericSignedBeaconBlock{}),
 				).Return(nil /*response*/, errors.New("uh oh"))
 
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				validator.ProposeBlock(t.Context(), 1, pubKey)
 
 				require.LogsContain(t, hook, "Failed to propose block")
@@ -385,9 +389,11 @@ func TestProposeBlock_BlocksDoubleProposal(t *testing.T) {
 					gomock.AssignableToTypeOf(&ethpb.GenericSignedBeaconBlock{}),
 				).Return(&ethpb.ProposeResponse{BlockRoot: make([]byte, 32)}, nil /*error*/)
 
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				validator.ProposeBlock(t.Context(), slot, pubKey)
 				require.LogsDoNotContain(t, hook, failedBlockSignLocalErr)
 
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				validator.ProposeBlock(t.Context(), slot, pubKey)
 				require.LogsContain(t, hook, failedBlockSignLocalErr)
 			})
@@ -449,9 +455,11 @@ func TestProposeBlock_BlocksDoubleProposal_After54KEpochs(t *testing.T) {
 				gomock.AssignableToTypeOf(&ethpb.GenericSignedBeaconBlock{}),
 			).Return(&ethpb.ProposeResponse{BlockRoot: make([]byte, 32)}, nil /*error*/)
 
+			expectUnregisteredRandao(m.validatorClient, pubKey)
 			validator.ProposeBlock(t.Context(), farFuture, pubKey)
 			require.LogsDoNotContain(t, hook, failedBlockSignLocalErr)
 
+			expectUnregisteredRandao(m.validatorClient, pubKey)
 			validator.ProposeBlock(t.Context(), farFuture, pubKey)
 			require.LogsContain(t, hook, failedBlockSignLocalErr)
 		})
@@ -518,6 +526,7 @@ func TestProposeBlock_AllowsOrNotPastProposals(t *testing.T) {
 					gomock.AssignableToTypeOf(&ethpb.GenericSignedBeaconBlock{}),
 				).Times(proposeBeaconBlockCount).Return(&ethpb.ProposeResponse{BlockRoot: make([]byte, 32)}, nil /*error*/)
 
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				validator.ProposeBlock(t.Context(), slot, pubKey)
 				require.LogsDoNotContain(t, hook, failedBlockSignLocalErr)
 
@@ -531,6 +540,7 @@ func TestProposeBlock_AllowsOrNotPastProposals(t *testing.T) {
 						Phase0: blk2.Block,
 					},
 				}, nil /*err*/)
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				validator.ProposeBlock(t.Context(), tt.pastSlot, pubKey)
 				if isSlashingProtectionMinimal {
 					require.LogsContain(t, hook, failedBlockSignLocalErr)
@@ -725,6 +735,7 @@ func testProposeBlock(t *testing.T, graffiti []byte) {
 					return &ethpb.ProposeResponse{BlockRoot: make([]byte, 32)}, nil
 				})
 
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				validator.ProposeBlock(t.Context(), 1, pubKey)
 				g := sentBlock.Block().Body().Graffiti()
 				assert.Equal(t, string(validator.graffiti), string(g[:]))

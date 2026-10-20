@@ -291,6 +291,7 @@ func TestProposeBlock_Gloas(t *testing.T) {
 			PublishExecutionPayloadEnvelope(gomock.Any(), gomock.AssignableToTypeOf(&ethpb.SignedExecutionPayloadEnvelope{})).
 			Return(&emptypb.Empty{}, nil)
 
+		expectUnregisteredRandao(m.validatorClient, pubKey)
 		validator.ProposeBlock(t.Context(), 1, pubKey)
 		require.LogsContain(t, hook, "Submitted new block")
 	})
@@ -321,6 +322,7 @@ func TestProposeBlock_Gloas(t *testing.T) {
 			GetExecutionPayloadEnvelope(gomock.Any(), primitives.Slot(1), gomock.Any()).
 			Return(nil, errors.New("connection refused"))
 
+		expectUnregisteredRandao(m.validatorClient, pubKey)
 		validator.ProposeBlock(t.Context(), 1, pubKey)
 		require.LogsContain(t, hook, "Submitted new block")
 	})

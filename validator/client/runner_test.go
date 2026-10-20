@@ -383,6 +383,10 @@ func TestRunnerPushesProposerSettings_ValidContext(t *testing.T) {
 	}).MinTimes(1)
 	// DomainData calls are really fast, no delay needed.
 	vcm.EXPECT().DomainData(liveCtx, gomock.Any()).Return(&ethpb.DomainResponse{SignatureDomain: make([]byte, 32)}, nil).AnyTimes()
+	vcm.EXPECT().RandaoCommitment(liveCtx, gomock.Any()).DoAndReturn(func(ctx context.Context, _ *ethpb.ValidatorIndexRequest) (*ethpb.RandaoCommitmentResponse, error) {
+		defer assertValidContext(t, timedCtx, ctx)
+		return &ethpb.RandaoCommitmentResponse{Commitment: make([]byte, fieldparams.RootLength)}, nil
+	}).AnyTimes()
 	vcm.EXPECT().SubscribeCommitteeSubnets(liveCtx, gomock.Any()).AnyTimes().Do(func(_, _ any) { delay(t) })
 	vcm.EXPECT().AttestationData(liveCtx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *ethpb.AttestationDataRequest) (*ethpb.AttestationData, error) {
 		defer assertValidContext(t, timedCtx, ctx)
@@ -526,7 +530,8 @@ func TestPerformRolesDispatch(t *testing.T) {
 			name: "proposer",
 			role: roleProposer,
 			slot: 1,
-			expect: func(_ *validator, m *mocks, _ [fieldparams.BLSPubkeyLength]byte) {
+			expect: func(_ *validator, m *mocks, pubKey [fieldparams.BLSPubkeyLength]byte) {
+				expectUnregisteredRandao(m.validatorClient, pubKey)
 				m.validatorClient.EXPECT().DomainData(gomock.Any(), gomock.Any()).Return(&ethpb.DomainResponse{SignatureDomain: make([]byte, fieldparams.RootLength)}, nil).Times(1)
 				m.validatorClient.EXPECT().BeaconBlock(gomock.Any(), gomock.Any()).Return(nil, stop).Times(1)
 			},

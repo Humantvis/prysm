@@ -1,10 +1,8 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@prysm//tools/go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "pool.go",
-    ],
+    srcs = ["pool.go"],
     importpath = "github.com/OffchainLabs/prysm/v7/beacon-chain/operations/randaocommitments",
     visibility = ["//visibility:public"],
     deps = [
