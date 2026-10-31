@@ -5,6 +5,7 @@ import (
 
 	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/epoch_processing"
 	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/fork"
+	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/networking"
 	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/operations"
 	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/sanity"
 )
@@ -37,4 +38,12 @@ func TestMinimal_Eip8321_Fork_UpgradeToEip8321(t *testing.T) {
 // registrations in one block, above MAX_RANDAO_COMMITMENT_REGISTRATIONS = 128).
 func TestMinimal_Eip8321_Sanity_Blocks(t *testing.T) {
 	sanity.RunBlockProcessingTest(t, "minimal", "sanity/blocks/pyspec_tests")
+}
+
+func TestMinimal_Eip8321_Operations_ExecutionPayloadBid(t *testing.T) {
+	operations.RunExecutionPayloadBidTest(t, "minimal")
+}
+
+func TestMinimal_Eip8321_Networking_GossipRandaoCommitmentRegistration(t *testing.T) {
+	networking.RunGossipRandaoCommitmentRegistrationTest(t, "minimal")
 }

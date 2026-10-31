@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "epoch.go",
+        "gossip.go",
         "hashchain.go",
         "pending_commitments.go",
         "randao_commitment.go",

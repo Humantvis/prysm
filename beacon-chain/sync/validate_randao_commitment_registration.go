@@ -9,7 +9,6 @@ import (
 	ethpb "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/pkg/errors"
 )
 
 func (s *Service) validateRandaoCommitmentRegistration(ctx context.Context, pid peer.ID, msg *pubsub.Message) (pubsub.ValidationResult, error) {
@@ -39,61 +38,21 @@ func (s *Service) validateRandaoCommitmentRegistration(ctx context.Context, pid 
 	if signed.Message == nil {
 		return pubsub.ValidationReject, errNilMessage
 	}
-	reg := signed.Message
-
-	if len(reg.Commitment) != 32 {
-		return pubsub.ValidationReject, errors.New("randao commitment must be 32 bytes")
-	}
-	var commitment [32]byte
-	copy(commitment[:], reg.Commitment)
-
-	if s.cfg.randaoCommitmentPool.ValidatorExists(reg.ValidatorIndex) {
-		return pubsub.ValidationIgnore, nil
-	}
-	
 	st, err := s.cfg.chain.HeadStateReadOnly(ctx)
 	if err != nil {
 		return pubsub.ValidationIgnore, err
 	}
 
-	numValidators := uint64(st.NumValidators())
-	// Only read the stored commitment when the index exists; Verify rejects the rest.
-	var stored [32]byte
-	if uint64(reg.ValidatorIndex) < numValidators {
-		stored, err = st.RandaoCommitmentAtIndex(reg.ValidatorIndex)
-		if err != nil {
-			return pubsub.ValidationIgnore, err
-		}
-	}
-	pendings, err := st.PendingRandaoCommitments()
-	if err != nil {
-		return pubsub.ValidationIgnore, err
-	}
-	pendingIdx := make([]uint64, len(pendings))
-	for i, p := range pendings {
-		pendingIdx[i] = uint64(p.ValidatorIndex)
-	}
-
-	// Shared consensus checks: index in range, non-zero commitment,
-	// not already registered, not already pending.
-	if err := eip8321.VerifyRandaoCommitmentRegistration(uint64(reg.ValidatorIndex), numValidators, commitment, stored, pendingIdx); err != nil {
-		// EIP text says REJECT for already-registered, but the reftest suite
-		// (gossip_randao_commitment_registration__ignore_already_registered)
-		// expects IGNORE. Matching the reftests for CI. Upstream divergence
-		// tracked at <link-to-issue>.
-		if errors.Is(err, eip8321.ErrAlreadyRegistered) {
-			return pubsub.ValidationIgnore, nil
-		}
-		if errors.Is(err, eip8321.ErrRegistrationAlreadyPending) {
-			return pubsub.ValidationIgnore, nil
-		}
+	// All spec checks except BLS live in core/eip8321 so the spec tests can run them.
+	result, sigBatch, err := eip8321.ValidateRandaoCommitmentRegistrationGossip(st, s.cfg.randaoCommitmentPool.ValidatorExists, signed)
+	switch result {
+	case eip8321.GossipIgnore:
+		return pubsub.ValidationIgnore, nil
+	case eip8321.GossipReject:
+		tracing.AnnotateError(span, err)
 		return pubsub.ValidationReject, err
 	}
 
-	sigBatch, err := eip8321.RandaoCommitmentRegistrationSignatureBatch(st, []*ethpb.SignedRandaoCommitmentRegistration{signed})
-	if err != nil {
-		return pubsub.ValidationReject, err
-	}
 	res, err := s.validateWithBatchVerifier(ctx, "randao commitment registration", sigBatch)
 	if res != pubsub.ValidationAccept {
 		return res, err
