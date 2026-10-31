@@ -14,6 +14,7 @@ go_test(
     deps = [
         "//testing/spectest/shared/eip8321/epoch_processing:go_default_library",
         "//testing/spectest/shared/eip8321/fork:go_default_library",
+        "//testing/spectest/shared/eip8321/networking:go_default_library",
         "//testing/spectest/shared/eip8321/operations:go_default_library",
         "//testing/spectest/shared/eip8321/sanity:go_default_library",
     ],

@@ -5,6 +5,7 @@ import (
 
 	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/epoch_processing"
 	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/fork"
+	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/networking"
 	"github.com/OffchainLabs/prysm/v7/testing/spectest/shared/eip8321/operations"
 )
 
@@ -30,4 +31,12 @@ func TestMainnet_Eip8321_EpochProcessing_RandaoMixesReset(t *testing.T) {
 
 func TestMainnet_Eip8321_Fork_UpgradeToEip8321(t *testing.T) {
 	fork.RunUpgradeToEip8321(t, "mainnet")
+}
+
+func TestMainnet_Eip8321_Operations_ExecutionPayloadBid(t *testing.T) {
+	operations.RunExecutionPayloadBidTest(t, "mainnet")
+}
+
+func TestMainnet_Eip8321_Networking_GossipRandaoCommitmentRegistration(t *testing.T) {
+	networking.RunGossipRandaoCommitmentRegistrationTest(t, "mainnet")
 }
