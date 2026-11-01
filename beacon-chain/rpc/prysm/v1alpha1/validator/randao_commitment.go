@@ -6,6 +6,8 @@ import (
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/eip8321"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/feed"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/feed/operation"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/time"
+	fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
 	ethpb "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 	"github.com/OffchainLabs/prysm/v7/runtime/version"
 	"github.com/sirupsen/logrus"
@@ -138,6 +140,17 @@ func (vs *Server) RandaoCommitment(
 	if !ok {
 		return nil, status.Error(codes.NotFound, "validator not found")
 	}
+
+	currentEpoch := time.CurrentEpoch(st)
+	pendings, err := st.PendingRandaoCommitments()
+	if err == nil {
+		for _, p := range pendings {
+			if p.ValidatorIndex == idx && p.ActivationEpoch <= currentEpoch+1 {
+				return &ethpb.RandaoCommitmentResponse{Commitment: p.Commitment}, nil
+			}
+		}
+	}
+
 	commitment, err := st.RandaoCommitmentAtIndex(idx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "could not read randao commitment: %v", err)

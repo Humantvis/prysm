@@ -125,7 +125,19 @@ func (r *runner) run(ctx context.Context) {
 					continue
 				}
 				dutiesCancel()
+				// EIP-8321: Automatically register randao commitments at the start of every epoch.
+				// We use a goroutine so the RPC/signing calls don't block slot processing.
+				// We use the parent ctx (not slotCtx) so it isn't cancelled at the end of the slot.
+				go func() {
+					epoch := slots.ToEpoch(slot)
+					for pubKey := range v.statusCache() {
+						if err := v.maybeRegisterRandaoCommitment(ctx, pubKey, epoch); err != nil {
+							log.WithError(err).WithField("pubkey", fmt.Sprintf("%#x", bytesutil.Trunc(pubKey[:]))).Error("Failed automatic randao registration")
+						}
+					}
+				}()
 			}
+
 
 			// Fetch the deferred next-epoch duties in the background. Pre-Gloas this
 			// no-ops: only the split path records the indices needsNextFetch requires.
