@@ -12,7 +12,6 @@ import (
 	"github.com/OffchainLabs/prysm/v7/runtime/version"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/pkg/errors"
 )
 
 func (s *Service) validateRandaoCommitmentRegistration(ctx context.Context, pid peer.ID, msg *pubsub.Message) (pubsub.ValidationResult, error) {
