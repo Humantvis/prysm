@@ -10,6 +10,7 @@ import (
 	"github.com/OffchainLabs/prysm/v7/config/params"
 	"github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
 	"github.com/OffchainLabs/prysm/v7/crypto/rand"
+	"github.com/OffchainLabs/prysm/v7/encoding/bytesutil"
 	ethpb "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 	validatorpb "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1/validator-client"
 	"github.com/OffchainLabs/prysm/v7/time/slots"
@@ -193,5 +194,35 @@ func (v *validator) RegisterRandaoCommitment(
 	if _, err := v.validatorClient.SubmitRandaoCommitmentRegistration(ctx, signed); err != nil {
 		return errors.Wrap(err, "submit randao commitment registration")
 	}
+	return nil
+}
+
+// maybeRegisterRandaoCommitment checks if the validator needs to register
+// and does so if the fork is active and they don't have an on-chain commitment.
+func (v *validator) maybeRegisterRandaoCommitment(ctx context.Context, pubKey [fieldparams.BLSPubkeyLength]byte, epoch primitives.Epoch) error {
+	forkEpoch := params.BeaconConfig().Eip8321ForkEpoch
+	if forkEpoch == params.BeaconConfig().FarFutureEpoch || epoch < forkEpoch {
+		return nil // Fork not active yet
+	}
+
+	// Check if already registered on-chain (non-zero commitment means registered)
+	onChain, err := v.onChainRandaoCommitment(ctx, pubKey)
+	if err != nil {
+		// If the node hasn't synced the fork block yet, the RPC might fail.
+		// We log and return nil so we don't block the validator's main loop.
+		return errors.Wrap(err, "failed to check on-chain commitment")
+	}
+	
+	if onChain != ([32]byte{}) {
+		return nil // Already registered!
+	}
+
+	// If we get here, the fork is active and we are NOT registered. Register!
+	err = v.RegisterRandaoCommitment(ctx, pubKey, epoch)
+	if err != nil {
+		return errors.Wrap(err, "failed to automatically register randao commitment")
+	}
+	
+	log.WithField("pubkey", fmt.Sprintf("%#x", bytesutil.Trunc(pubKey[:]))).Info("Successfully submitted automatic randao commitment registration")
 	return nil
 }
