@@ -6,13 +6,15 @@ import (
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/eip8321"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/feed"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/feed/operation"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/transition"
+	fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
 	ethpb "github.com/OffchainLabs/prysm/v7/proto/prysm/v1alpha1"
 	"github.com/OffchainLabs/prysm/v7/runtime/version"
+	"github.com/OffchainLabs/prysm/v7/time/slots"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-    fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
 )
 
 // SubmitRandaoCommitmentRegistration validates a signed randao commitment
@@ -123,6 +125,14 @@ func (vs *Server) RandaoCommitment(
 	st, err := vs.HeadFetcher.HeadStateReadOnly(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "could not get head state: %v", err)
+	}
+	// Epoch processing can activate a commitment before the next block exists.
+	if vs.TimeFetcher != nil && slots.ToEpoch(vs.TimeFetcher.CurrentSlot()) > slots.ToEpoch(st.Slot()) {
+		advanced, advanceErr := transition.ProcessSlots(ctx, st.Copy(), vs.TimeFetcher.CurrentSlot())
+		if advanceErr != nil {
+			return nil, status.Errorf(codes.Internal, "could not advance commitment state: %v", advanceErr)
+		}
+		st = advanced
 	}
 
 	// Pre-EIP-8321: no randao commitments exist, return 32 zero bytes

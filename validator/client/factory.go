@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/OffchainLabs/prysm/v7/config/features"
+	"github.com/OffchainLabs/prysm/v7/config/params"
 	beaconApi "github.com/OffchainLabs/prysm/v7/validator/client/beacon-api"
 	grpcApi "github.com/OffchainLabs/prysm/v7/validator/client/grpc-api"
 	"github.com/OffchainLabs/prysm/v7/validator/client/iface"
@@ -27,7 +28,11 @@ func NewChainClient(validatorConn *validatorHelpers.NodeConnection) iface.ChainC
 
 func NewValidatorClient(validatorConn *validatorHelpers.NodeConnection, opts ...iface.Option) iface.ValidatorClient {
 	if features.Get().EnableBeaconRESTApi && validatorConn.GetRestConnectionProvider() != nil {
-		return beaconApi.NewBeaconApiValidatorClient(validatorConn.GetRestConnectionProvider(), opts...)
+		restClient := beaconApi.NewBeaconApiValidatorClient(validatorConn.GetRestConnectionProvider(), opts...)
+		if params.BeaconConfig().Eip8321ForkEpoch < params.BeaconConfig().FarFutureEpoch && validatorConn.GetGrpcConnectionProvider() != nil {
+			return &eip8321ValidatorClient{ValidatorClient: restClient, grpcClient: grpcApi.NewGrpcValidatorClient(validatorConn, opts...)}
+		}
+		return restClient
 	}
 	return grpcApi.NewGrpcValidatorClient(validatorConn, opts...)
 }

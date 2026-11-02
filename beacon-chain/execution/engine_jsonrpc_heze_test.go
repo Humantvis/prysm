@@ -154,6 +154,14 @@ func TestForkchoiceUpdated_Heze(t *testing.T) {
 		TargetGasLimit:            3,
 		InclusionListTransactions: [][]byte{{0x01}},
 	}
+	t.Run("EIP-8321 retains the Heze engine API", func(t *testing.T) {
+		var got capturedRPC
+		s := hezeEngineService(t, result, 0, &got)
+		_, _, _, err := s.ForkchoiceUpdated(t.Context(), fcs, payloadattribute.EmptyWithVersion(version.Eip8321))
+		require.NoError(t, err)
+		require.Equal(t, ForkchoiceUpdatedMethodV5, got.Method)
+		require.Equal(t, `null`, string(got.Params[1]))
+	})
 
 	t.Run("Heze attributes use V5", func(t *testing.T) {
 		var got capturedRPC

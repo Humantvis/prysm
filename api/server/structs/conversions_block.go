@@ -272,6 +272,8 @@ func SignedBeaconBlockMessageJsoner(block interfaces.ReadOnlySignedBeaconBlock) 
 		return SignedBeaconBlockGloasFromConsensus(pbStruct)
 	case *eth.SignedBeaconBlockHeze:
 		return SignedBeaconBlockHezeFromConsensus(pbStruct)
+	case *eth.SignedBeaconBlockEip8321:
+		return SignedBeaconBlockEip8321FromConsensus(pbStruct)
 	default:
 		return nil, ErrUnsupportedConversion
 	}

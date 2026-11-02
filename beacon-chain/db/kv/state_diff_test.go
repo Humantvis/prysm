@@ -1624,6 +1624,15 @@ func createState(t *testing.T, slot primitives.Slot, v int) (state.BeaconState, 
 			Epoch:           p.HezeForkEpoch,
 		})
 		require.NoError(t, err)
+	case version.Eip8321:
+		st, err = util.NewBeaconStateEip8321()
+		require.NoError(t, err)
+		err = st.SetFork(&ethpb.Fork{
+			PreviousVersion: p.HezeForkVersion,
+			CurrentVersion:  p.Eip8321ForkVersion,
+			Epoch:           p.Eip8321ForkEpoch,
+		})
+		require.NoError(t, err)
 	default:
 		t.Fatalf("unsupported version: %d", v)
 	}

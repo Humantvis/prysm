@@ -12,6 +12,7 @@ import (
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/altair"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/capella"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/deneb"
+	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/eip8321"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/electra"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/execution"
 	"github.com/OffchainLabs/prysm/v7/beacon-chain/core/fulu"
@@ -75,6 +76,14 @@ func ApplyDiff(ctx context.Context, source state.BeaconState, diff HdiffBytes) (
 	}
 	if source, err = applyValidatorDiff(source, hdiff.validatorDiffs); err != nil {
 		return nil, errors.Wrap(err, "failed to apply validator diff")
+	}
+	if hdiff.stateDiff.targetVersion >= version.Eip8321 {
+		if err := source.SetRandaoCommitments(hdiff.stateDiff.randaoCommitments); err != nil {
+			return nil, err
+		}
+		if err := source.SetPendingRandaoCommitments(hdiff.stateDiff.pendingRandaoCommitments); err != nil {
+			return nil, err
+		}
 	}
 	return source, nil
 }
@@ -146,7 +155,9 @@ type stateDiff struct {
 	ptcWindow                      []*ethpb.PTCs                     // override.
 
 	// Heze
-	latestExecutionPayloadBidHeze *ethpb.ExecutionPayloadBidHeze // override, replaces latestExecutionPayloadBid from Heze.
+	latestExecutionPayloadBidHeze *ethpb.ExecutionPayloadBidHeze   // override, replaces latestExecutionPayloadBid from Heze.
+	randaoCommitments             [][]byte                         // override.
+	pendingRandaoCommitments      []*ethpb.PendingRandaoCommitment // override.
 }
 
 type hdiff struct {
@@ -912,6 +923,11 @@ func newStateDiff(input []byte) (*stateDiff, error) {
 			return nil, err
 		}
 	}
+	if ret.targetVersion >= version.Eip8321 {
+		if err := ret.readEip8321Fields(&data); err != nil {
+			return nil, err
+		}
+	}
 	if len(data) > 0 {
 		return nil, errors.Errorf("data is too large, exceeded by %d bytes", len(data))
 	}
@@ -1094,6 +1110,9 @@ func (s *stateDiff) serializedSize() int {
 	}
 	if s.targetVersion >= version.Gloas {
 		size += serializedGloasFieldsSize(s)
+	}
+	if s.targetVersion >= version.Eip8321 {
+		size += 16 + 32*len(s.randaoCommitments) + 48*len(s.pendingRandaoCommitments)
 	}
 	return size
 }
@@ -1315,6 +1334,12 @@ func (s *stateDiff) serialize() []byte {
 	}
 	if s.targetVersion >= version.Gloas {
 		ret = serializeGloasFields(ret, s)
+	}
+	if s.targetVersion >= version.Eip8321 {
+		if ret == nil {
+			return nil
+		}
+		ret = s.serializeEip8321Fields(ret)
 	}
 	return ret
 }
@@ -1641,6 +1666,16 @@ func diffToState(source, target state.ReadOnlyBeaconState) (*stateDiff, error) {
 
 	if err := diffGloasFields(ret, source, target); err != nil {
 		return nil, err
+	}
+	if target.Version() >= version.Eip8321 {
+		ret.randaoCommitments, err = target.RandaoCommitments()
+		if err != nil {
+			return nil, err
+		}
+		ret.pendingRandaoCommitments, err = target.PendingRandaoCommitments()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return ret, nil
@@ -2417,6 +2452,8 @@ func updateToVersion(ctx context.Context, source state.BeaconState, target int) 
 			return nil, errors.Wrap(err, "failed to align deposit requests start index")
 		}
 		ret, err = heze.UpgradeToHeze(source)
+	case version.Heze:
+		ret, err = eip8321.UpgradeToEip8321(source)
 	default:
 		return nil, errors.Errorf("unsupported version %s", version.String(source.Version()))
 	}

@@ -99,6 +99,7 @@ go_test(
         "checkpoint_test.go",
         "custody_test.go",
         "deposit_contract_test.go",
+        "eip8321_test.go",
         "encoding_test.go",
         "execution_chain_test.go",
         "execution_payload_envelope_test.go",

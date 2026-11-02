@@ -64,6 +64,7 @@ var (
 	fuluBlindKey               = []byte("blind-fulu")
 	gloasKey                   = []byte("gloas")
 	hezeKey                    = []byte("heze")
+	eip8321Key                 = []byte("eip8321")
 
 	// No blindKeys for post-Gloas needed - post-Gloas blocks are never blinded (no execution payload in block body).
 
