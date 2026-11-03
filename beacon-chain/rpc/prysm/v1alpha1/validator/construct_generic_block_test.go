@@ -17,6 +17,20 @@ import (
 
 func TestConstructGenericBeaconBlock(t *testing.T) {
 	vs := &Server{}
+	t.Run("eip8321 block", func(t *testing.T) {
+		eb := util.NewBeaconBlockEip8321()
+		eb.Block.Body.HashChainReveal[0] = 42
+		b, err := blocks.NewSignedBeaconBlock(eb)
+		require.NoError(t, err)
+		r1, err := eb.Block.HashTreeRoot()
+		require.NoError(t, err)
+		result, err := vs.constructGenericBeaconBlock(b, nil, primitives.ZeroWei())
+		require.NoError(t, err)
+		require.NotNil(t, result.GetEip8321())
+		r2, err := result.GetEip8321().HashTreeRoot()
+		require.NoError(t, err)
+		require.Equal(t, r1, r2)
+	})
 
 	// Test when sBlk or sBlk.Block() is nil
 	t.Run("NilBlock", func(t *testing.T) {

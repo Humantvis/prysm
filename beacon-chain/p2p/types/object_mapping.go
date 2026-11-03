@@ -100,6 +100,11 @@ func InitializeDataMaps() {
 				&ethpb.SignedBeaconBlockHeze{Block: &ethpb.BeaconBlockHeze{Body: &ethpb.BeaconBlockBodyHeze{}}},
 			)
 		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (interfaces.ReadOnlySignedBeaconBlock, error) {
+			return blocks.NewSignedBeaconBlock(
+				&ethpb.SignedBeaconBlockEip8321{Block: &ethpb.BeaconBlockEip8321{Body: &ethpb.BeaconBlockBodyEip8321{}}},
+			)
+		},
 	}
 
 	// Reset our metadata map.
@@ -129,6 +134,9 @@ func InitializeDataMaps() {
 			return wrapper.WrappedMetadataV2(&ethpb.MetaDataV2{}), nil
 		},
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (metadata.Metadata, error) {
+			return wrapper.WrappedMetadataV2(&ethpb.MetaDataV2{}), nil
+		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (metadata.Metadata, error) {
 			return wrapper.WrappedMetadataV2(&ethpb.MetaDataV2{}), nil
 		},
 	}
@@ -162,6 +170,9 @@ func InitializeDataMaps() {
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (ethpb.Att, error) {
 			return &ethpb.SingleAttestation{}, nil
 		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (ethpb.Att, error) {
+			return &ethpb.SingleAttestation{}, nil
+		},
 	}
 
 	// Reset our aggregate attestation map.
@@ -191,6 +202,9 @@ func InitializeDataMaps() {
 			return &ethpb.SignedAggregateAttestationAndProofGloas{}, nil
 		},
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (ethpb.SignedAggregateAttAndProof, error) {
+			return &ethpb.SignedAggregateAttestationAndProofGloas{}, nil
+		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (ethpb.SignedAggregateAttAndProof, error) {
 			return &ethpb.SignedAggregateAttestationAndProofGloas{}, nil
 		},
 	}
@@ -224,6 +238,9 @@ func InitializeDataMaps() {
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (ethpb.AttSlashing, error) {
 			return &ethpb.AttesterSlashingElectra{}, nil
 		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (ethpb.AttSlashing, error) {
+			return &ethpb.AttesterSlashingElectra{}, nil
+		},
 	}
 
 	// Reset our light client optimistic update map.
@@ -250,6 +267,9 @@ func InitializeDataMaps() {
 			return lightclientConsensusTypes.NewEmptyOptimisticUpdateDeneb(), nil
 		},
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (interfaces.LightClientOptimisticUpdate, error) {
+			return lightclientConsensusTypes.NewEmptyOptimisticUpdateDeneb(), nil
+		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (interfaces.LightClientOptimisticUpdate, error) {
 			return lightclientConsensusTypes.NewEmptyOptimisticUpdateDeneb(), nil
 		},
 	}
@@ -280,6 +300,9 @@ func InitializeDataMaps() {
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (interfaces.LightClientFinalityUpdate, error) {
 			return lightclientConsensusTypes.NewEmptyFinalityUpdateElectra(), nil
 		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (interfaces.LightClientFinalityUpdate, error) {
+			return lightclientConsensusTypes.NewEmptyFinalityUpdateElectra(), nil
+		},
 	}
 
 	DataColumnSidecarMap = map[[4]byte]func() (ssz.Unmarshaler, error){
@@ -292,6 +315,9 @@ func InitializeDataMaps() {
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (ssz.Unmarshaler, error) {
 			return &ethpb.DataColumnSidecarGloas{}, nil
 		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (ssz.Unmarshaler, error) {
+			return &ethpb.DataColumnSidecarGloas{}, nil
+		},
 	}
 
 	ExecutionPayloadBidMap = map[[4]byte]func() (ssz.Unmarshaler, error){
@@ -299,6 +325,9 @@ func InitializeDataMaps() {
 			return &ethpb.SignedExecutionPayloadBid{}, nil
 		},
 		bytesutil.ToBytes4(params.BeaconConfig().HezeForkVersion): func() (ssz.Unmarshaler, error) {
+			return &ethpb.SignedExecutionPayloadBidHeze{}, nil
+		},
+		bytesutil.ToBytes4(params.BeaconConfig().Eip8321ForkVersion): func() (ssz.Unmarshaler, error) {
 			return &ethpb.SignedExecutionPayloadBidHeze{}, nil
 		},
 	}

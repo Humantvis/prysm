@@ -141,7 +141,7 @@ func (s *Service) topicScoreParams(topic string) (*pubsub.TopicScoreParams, erro
 		return defaultProposerSlashingTopicParams(), nil
 	case strings.Contains(topic, GossipAttesterSlashingMessage):
 		return defaultAttesterSlashingTopicParams(), nil
-	case strings.Contains(topic, GossipBlsToExecutionChangeMessage):
+	case strings.Contains(topic, GossipBlsToExecutionChangeMessage), strings.Contains(topic, GossipRandaoCommitmentRegistrationMessage):
 		return defaultBlsToExecutionChangeTopicParams(), nil
 	case strings.Contains(topic, GossipBlobSidecarMessage), strings.Contains(topic, GossipDataColumnSidecarMessage):
 		// TODO(Deneb): Using the default block scoring. But this should be updated.

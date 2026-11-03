@@ -47,6 +47,36 @@ func (v *validator) randaoChainLength() uint64 {
 	return DefaultRandaoHashChainLength
 }
 
+// registerUncommittedRandao retries unregistered keys once per epoch after the fork.
+func (v *validator) registerUncommittedRandao(ctx context.Context, epoch primitives.Epoch) {
+	if epoch < params.BeaconConfig().Eip8321ForkEpoch {
+		return
+	}
+	keys, err := v.km.FetchValidatingPublicKeys(ctx)
+	if err != nil {
+		log.WithError(err).Warn("Could not load keys for RANDAO registration")
+		return
+	}
+	for _, key := range keys {
+		if ctx.Err() != nil {
+			return
+		}
+		commitment, err := v.onChainRandaoCommitment(ctx, key)
+		if err != nil {
+			log.WithError(err).Warn("Could not check RANDAO registration")
+			continue
+		}
+		if commitment != ([32]byte{}) {
+			continue
+		}
+		if err := v.RegisterRandaoCommitment(ctx, key, epoch); err != nil {
+			log.WithError(err).Debug("RANDAO registration not accepted; will retry next epoch")
+			continue
+		}
+		log.WithField("pubkey", fmt.Sprintf("%#x", key[:])).Info("Submitted RANDAO commitment registration")
+	}
+}
+
 // ensureRandaoChain loads stored {seed, length}, or creates + persists a fresh
 // chain on first call. Idempotent.
 func (v *validator) ensureRandaoChain(ctx context.Context, pubKey [fieldparams.BLSPubkeyLength]byte) (seed [32]byte, length uint64, err error) {

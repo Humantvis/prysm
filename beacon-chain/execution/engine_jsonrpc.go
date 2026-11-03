@@ -319,7 +319,7 @@ func (s *Service) ForkchoiceUpdated(
 		if err != nil {
 			return nil, nil, nil, handleRPCError(err)
 		}
-	case version.Heze:
+	case version.Heze, version.Eip8321:
 		a, err := attrs.PbV5()
 		if err != nil {
 			return nil, nil, nil, err

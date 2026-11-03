@@ -53,6 +53,7 @@ var (
 		version.Fulu:      fuluKey,
 		version.Gloas:     gloasKey,
 		version.Heze:      hezeKey,
+		version.Eip8321:   eip8321Key,
 	}
 )
 
@@ -437,6 +438,12 @@ func encodeStateWithKey(st state.ReadOnlyBeaconState) ([]byte, error) {
 
 func decodeStateSnapshot(enc []byte) (state.BeaconState, error) {
 	switch {
+	case hasEip8321Key(enc):
+		var featureState ethpb.BeaconStateEip8321
+		if err := featureState.UnmarshalSSZ(enc[len(eip8321Key):]); err != nil {
+			return nil, err
+		}
+		return statenative.InitializeFromProtoUnsafeEip8321(&featureState)
 	case hasHezeKey(enc):
 		var hezeState ethpb.BeaconStateHeze
 		if err := hezeState.UnmarshalSSZ(enc[len(hezeKey):]); err != nil {

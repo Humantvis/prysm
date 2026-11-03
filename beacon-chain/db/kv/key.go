@@ -101,3 +101,7 @@ func hasHezeKey(enc []byte) bool {
 	}
 	return bytes.Equal(enc[:len(hezeKey)], hezeKey)
 }
+
+func hasEip8321Key(enc []byte) bool {
+	return len(enc) > len(eip8321Key) && bytes.Equal(enc[:len(eip8321Key)], eip8321Key)
+}

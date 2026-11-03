@@ -132,6 +132,7 @@ go_test(
         "data_column_broadcast_log_test.go",
         "dial_relay_node_test.go",
         "discovery_test.go",
+        "eip8321_test.go",
         "fork_test.go",
         "gossip_scoring_params_test.go",
         "gossip_topic_mappings_test.go",

@@ -40,6 +40,9 @@ var gossipTopicMappings = map[string]func() proto.Message{
 func GossipTopicMappings(topic string, epoch primitives.Epoch) proto.Message {
 	switch topic {
 	case BlockSubnetTopicFormat:
+		if epoch >= params.BeaconConfig().Eip8321ForkEpoch {
+			return &ethpb.SignedBeaconBlockEip8321{}
+		}
 		if epoch >= params.BeaconConfig().HezeForkEpoch {
 			return &ethpb.SignedBeaconBlockHeze{}
 		}
@@ -173,6 +176,7 @@ func init() {
 	GossipTypeMapping[reflect.TypeFor[*ethpb.SignedAggregateAttestationAndProofGloas]()] = AggregateAndProofSubnetTopicFormat
 	// Specially handle Heze objects.
 	GossipTypeMapping[reflect.TypeFor[*ethpb.SignedBeaconBlockHeze]()] = BlockSubnetTopicFormat
+	GossipTypeMapping[reflect.TypeFor[*ethpb.SignedBeaconBlockEip8321]()] = BlockSubnetTopicFormat
 	GossipTypeMapping[reflect.TypeFor[*ethpb.SignedExecutionPayloadBidHeze]()] = ExecutionPayloadBidTopicFormat
 	GossipTypeMapping[reflect.TypeFor[*ethpb.SignedInclusionList]()] = InclusionListTopicFormat
 

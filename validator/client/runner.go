@@ -125,6 +125,11 @@ func (r *runner) run(ctx context.Context) {
 					continue
 				}
 				dutiesCancel()
+				registrationCtx, registrationCancel := context.WithDeadline(ctx, dutiesDeadline)
+				go func() {
+					defer registrationCancel()
+					v.registerUncommittedRandao(registrationCtx, slots.ToEpoch(slot))
+				}()
 			}
 
 			// Fetch the deferred next-epoch duties in the background. Pre-Gloas this

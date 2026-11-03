@@ -15,6 +15,7 @@ go_library(
         "conversions_heze.go",
         "conversions_lightclient.go",
         "conversions_state.go",
+        "eip8321.go",
         "endpoints_beacon.go",
         "endpoints_blob.go",
         "endpoints_config.go",
@@ -64,6 +65,7 @@ go_test(
         "conversions_gloas_test.go",
         "conversions_heze_test.go",
         "conversions_test.go",
+        "eip8321_test.go",
     ],
     embed = [":go_default_library"],
     deps = [
