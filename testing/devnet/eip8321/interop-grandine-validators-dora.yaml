@@ -1,0 +1,39 @@
+participants:
+  # our Prysm: 2 nodes x 48 validators
+  - el_type: geth
+    el_image: ethpandaops/geth:heze-devnet-2-66af2fe
+    cl_type: prysm
+    cl_image: bct/prysm-beacon:eip8321-minimal
+    vc_image: bct/prysm-validator:eip8321-minimal
+    vc_extra_params:
+      - --enable-beacon-rest-api
+    supernode: true
+    count: 2
+    validator_count: 48
+
+  # Grandine team's client: 1 node with 32 validators
+  - el_type: geth
+    el_image: ethpandaops/geth:heze-devnet-2-66af2fe
+    cl_type: grandine
+    cl_image: ghcr.io/lukassta/grandine@sha256:28d4dc1c06957f427f4209131a1a89047eab818022cfda552f668d4f2d34be8a
+    supernode: true
+    count: 1
+    validator_count: 32
+
+network_params:
+  preset: minimal
+  genesis_delay: 90
+  electra_fork_epoch: 0
+  fulu_fork_epoch: 0
+  gloas_fork_epoch: 0
+  heze_fork_epoch: 0
+  eip8321_fork_epoch: 4
+  eip8321_fork_version: '0xe8321101'
+
+additional_services:
+  - dora
+  - prometheus
+  - grafana
+
+dora_params:
+  image: bct/dora:eip8321

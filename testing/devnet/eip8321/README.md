@@ -96,4 +96,40 @@ The current implementation uses REST for Heze duties and gRPC for EIP-specific p
 
 The generator emits newer `SLOT_DURATION_MS_HEZE` and `MIN_BLOB_DATA_RETENTION_MS` fields that this team baseline reports as unrecognized. This demonstration keeps the same 6000 ms slot duration across Heze; it does not validate a dynamic slot-duration change or historical blob-retention behavior.
 
-This is a Prysm-only minimal-preset development network. Successful finalization does not establish interoperability with another client or full Ethereum mainnet readiness.
+The two-node setup above is a Prysm-only minimal-preset development network. Successful finalization does not establish interoperability with another client or full Ethereum mainnet readiness.
+
+## Run Prysm and Grandine with the EIP-8321 Dora explorer
+
+This setup uses two Prysm nodes with 48 validators each and one Grandine
+node with 32 validators. Both clients can propose blocks. EIP-8321 activates
+at epoch 4 (slot 32). Grandine is pinned by image digest.
+
+From the Prysm repository root in PowerShell 7, with Docker running:
+
+```powershell
+./testing/devnet/eip8321/Build.ps1
+git clone https://github.com/augas555/dora.git ../dora-eip8321
+git -C ../dora-eip8321 checkout --detach 6b72e233cb179f3a0a1f03f60a956b495ebdd3b2
+docker build -t bct/dora:eip8321 ../dora-eip8321
+```
+
+The Dora fork pins the EIP-8321 decoder in its Go dependencies.
+Set the Kurtosis path for your machine and use a fresh enclave name:
+
+```powershell
+$kurtosis = 'C:/path/to/kurtosis.exe'
+$package = @(./testing/devnet/eip8321/Prepare-Package.ps1)[-1]
+$config = (Resolve-Path ./testing/devnet/eip8321/interop-grandine-validators-dora.yaml).Path
+$enclave = 'interop-dora'
+& $kurtosis run $package --args-file $config --enclave $enclave --image-download missing
+& $kurtosis port print $enclave dora http
+```
+
+Open the printed URL. From slot 32, the slot page displays the EIP-8321 hash
+reveal and RANDAO registration count. Look for proposed blocks from both
+clients with nonzero hash reveals, then check that finalization continues.
+To remove the disposable network and its test data after the run:
+
+```powershell
+& $kurtosis enclave rm -f $enclave
+```
