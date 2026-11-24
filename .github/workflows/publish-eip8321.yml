@@ -72,6 +72,18 @@ jobs:
             docker run --rm "$image" --version
             docker run --rm --entrypoint /bin/sh "$image" -c "test -x /$binary && test -x /app/cmd/$binary/$binary"
           done
+      - name: Archive tested binaries and image recipe
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          cp testing/devnet/eip8321/Dockerfile.native "$OUTPUT_DIR/Dockerfile"
+          printf '%s\n' "$GITHUB_SHA" > "$OUTPUT_DIR/SOURCE_REVISION"
+          tar -C "$OUTPUT_DIR" -czf "$RUNNER_TEMP/prysm-eip8321-$ARCH.tar.gz" bin binaries.sha256 Dockerfile SOURCE_REVISION
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prysm-eip8321-linux-${{ matrix.arch }}-${{ github.sha }}
+          path: ${{ runner.temp }}/prysm-eip8321-${{ matrix.arch }}.tar.gz
+          retention-days: 14
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io

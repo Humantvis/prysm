@@ -146,6 +146,14 @@ Docker selects `linux/amd64` or `linux/arm64` automatically for either image:
 - `ghcr.io/humantvis/prysm-beacon:eip8321-minimal`
 - `ghcr.io/humantvis/prysm-validator:eip8321-minimal`
 
+Existing GHCR packages must grant the `Humantvis/prysm` repository **Write**
+access under package settings, **Manage Actions access**. Otherwise publication
+fails with `permission_denied: write_package` even when compilation and tests
+pass. The workflow also saves tested native binaries and the Dockerfile as
+`prysm-eip8321-linux-<arch>-<commit>` Actions artifacts before publication.
+Extract the contained tar archive to preserve executable permissions; from that
+directory check hashes with `cd bin; sha256sum -c ../binaries.sha256`.
+
 `interop-lukas.yaml` is adapted from `lukassta/heze-devnets` revision `b716431`.
 It uses Lodestar, Prysm and Grandine, each with its own validators, Ethrex, and
 the published EIP-8321 Dora. It requires Kurtosis 1.23.0 or newer (1.22.2 rejects

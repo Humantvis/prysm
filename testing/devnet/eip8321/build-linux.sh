@@ -22,4 +22,4 @@ fi
   --workspace_status_command= --symlink_prefix="$cache/bazel-links/" --jobs="${BUILD_JOBS:-4}" --enable_runfiles=false
 cp --remove-destination "$cache/bazel-links/bin/cmd/beacon-chain/beacon-chain_/beacon-chain" "$out/bin/beacon-chain"
 cp --remove-destination "$cache/bazel-links/bin/cmd/validator/validator_/validator" "$out/bin/validator"
-sha256sum "$out/bin/beacon-chain" "$out/bin/validator" > "$out/binaries.sha256"
+(cd "$out/bin" && sha256sum beacon-chain validator) > "$out/binaries.sha256"
