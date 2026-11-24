@@ -133,3 +133,66 @@ To remove the disposable network and its test data after the run:
 ```powershell
 & $kurtosis enclave rm -f $enclave
 ```
+
+## AMD64 / ARM64 images and the Lukas interoperability network
+
+The `Publish EIP-8321 Prysm` workflow builds the minimal beacon and validator
+binaries with Bazel on native `ubuntu-24.04` and `ubuntu-24.04-arm` runners.
+Both architectures run EIP-8321/hash tests and image startup checks before a
+combined manifest is published. Revision tags are `sha-<full-commit>`; the
+`eip8321-minimal` tag is updated only by successful builds of `eip-8321-heze`.
+Docker selects `linux/amd64` or `linux/arm64` automatically for either image:
+
+- `ghcr.io/humantvis/prysm-beacon:eip8321-minimal`
+- `ghcr.io/humantvis/prysm-validator:eip8321-minimal`
+
+Existing GHCR packages must grant the `Humantvis/prysm` repository **Write**
+access under package settings, **Manage Actions access**. Otherwise publication
+fails with `permission_denied: write_package` even when compilation and tests
+pass. The workflow also saves tested native binaries and the Dockerfile as
+`prysm-eip8321-linux-<arch>-<commit>` Actions artifacts before publication.
+Extract the contained tar archive to preserve executable permissions; from that
+directory check hashes with `cd bin; sha256sum -c ../binaries.sha256`.
+
+`interop-lukas.yaml` is adapted from `lukassta/heze-devnets` revision `b716431`.
+It uses Lodestar, Prysm and Grandine, each with its own validators, Ethrex, and
+the published EIP-8321 Dora. It requires Kurtosis 1.23.0 or newer (1.22.2 rejects
+`PortSpec.host_ip` in the pinned package). From the Prysm repository root:
+
+```powershell
+docker build -t ethereum-genesis-generator:eip8321 ./testing/devnet/eip8321/eip8321-genesis
+docker pull ghcr.io/humantvis/prysm-beacon:eip8321-minimal
+docker pull ghcr.io/humantvis/prysm-validator:eip8321-minimal
+docker pull ghcr.io/lukassta/grandine:eip8321-minimal
+docker pull ghcr.io/edva-code/lodestar:eip8321-8a11e97f6
+docker pull ethpandaops/ethrex:heze-devnet-2
+kurtosis run github.com/ethpandaops/ethereum-package@a4f2204f1347bc7439e8dc63ee70b9003e10e700 --enclave eip8321-lukas --args-file ./testing/devnet/eip8321/interop-lukas.yaml --image-download missing
+kurtosis port print eip8321-lukas dora http
+```
+
+Heze is active at genesis; EIP-8321 activates at epoch 1 (slot 8), with version
+`0xe8321038`. The original upstream package is used without our older patch.
+Pulling mutable tags before a fresh run avoids silently reusing an older build.
+The beacon/validator multiarchitecture images do not establish ARM64 support
+for the other clients, Dora or the genesis generator; check their manifests too.
+
+The Prysm validator requires both providers **from startup**, for example:
+
+```yaml
+vc_extra_params:
+  - --enable-beacon-rest-api
+  - --beacon-rpc-provider=cl-2-prysm-ethrex:4000
+```
+
+REST serves Heze duties; gRPC serves EIP-8321 registration/commitment operations
+and the existing EIP-8321 block proposal path. The hostname is specific to this
+configuration: Prysm is participant 2 and its execution client is Ethrex. Change
+it if you reorder participants or use a different execution client. Do not copy
+that hostname into the older two-Prysm/Geth configuration; its package patch
+already derives a separate gRPC address for each validator.
+
+To stop and delete only this disposable network and its test data:
+
+```powershell
+kurtosis enclave rm -f eip8321-lukas
+```

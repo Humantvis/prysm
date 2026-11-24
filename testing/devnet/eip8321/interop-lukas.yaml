@@ -1,0 +1,40 @@
+# Adapted from lukassta/heze-devnets b716431; Heze at genesis, EIP-8321 at epoch 1.
+# Build the local genesis generator as described in README.md.
+participants_matrix:
+  el:
+    - el_type: ethrex
+      el_image: ethpandaops/ethrex:heze-devnet-2
+  cl:
+    - cl_type: lodestar
+      cl_image: ghcr.io/edva-code/lodestar:eip8321-8a11e97f6
+      supernode: true
+    - cl_type: prysm
+      cl_image: ghcr.io/humantvis/prysm-beacon:eip8321-minimal
+      vc_image: ghcr.io/humantvis/prysm-validator:eip8321-minimal
+      vc_extra_params:
+        - --enable-beacon-rest-api
+        - --beacon-rpc-provider=cl-2-prysm-ethrex:4000
+      supernode: true
+    - cl_type: grandine
+      cl_image: ghcr.io/lukassta/grandine:eip8321-minimal
+      supernode: true
+
+network_params:
+  preset: minimal
+  gloas_fork_epoch: 0
+  heze_fork_epoch: 0
+
+additional_services:
+  - spamoor
+  - dora
+
+global_log_level: debug
+
+ethereum_genesis_generator_params:
+  image: ethereum-genesis-generator:eip8321
+  extra_env:
+    EIP8321_FORK_VERSION: "0xe8321038"
+    EIP8321_FORK_EPOCH: 1
+
+dora_params:
+  image: ghcr.io/augas555/dora:eip8321
