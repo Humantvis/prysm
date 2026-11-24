@@ -1,0 +1,113 @@
+name: Publish EIP-8321 Prysm
+
+on:
+  push:
+    branches: [eip-8321-heze, augustas/arm64-images]
+    paths:
+      - '**.go'
+      - '**.bazel'
+      - go.mod
+      - go.sum
+      - deps.bzl
+      - WORKSPACE
+      - build/**
+      - testing/devnet/eip8321/**
+      - .github/workflows/publish-eip8321.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eip8321-images-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.repository == 'Humantvis/prysm'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Configure build directories
+        run: |
+          echo "CACHE_DIR=$RUNNER_TEMP/prysm-cache" >> "$GITHUB_ENV"
+          echo "OUTPUT_DIR=$RUNNER_TEMP/prysm-out" >> "$GITHUB_ENV"
+      - name: Build minimal binaries natively with Bazel
+        run: bash testing/devnet/eip8321/build-linux.sh
+      - name: Test EIP-8321 and hashing on this architecture
+        run: |
+          case "$(uname -m)" in x86_64) arch=x86_64 ;; aarch64) arch=arm64 ;; *) exit 1 ;; esac
+          "$CACHE_DIR/bazel-7.4.1-$arch" --batch --output_user_root="$CACHE_DIR/bazel-root" test \
+            //beacon-chain/core/eip8321:go_default_test //crypto/hash:go_default_test \
+            --config=minimal --workspace_status_command= --jobs=2 --test_output=errors \
+            --symlink_prefix="$CACHE_DIR/bazel-links/" --enable_runfiles=false
+      - name: Build and smoke-test both images
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          for binary in beacon-chain validator; do
+            image="prysm-$binary:check"
+            docker build --platform "linux/$ARCH" --build-arg "BINARY=$binary" \
+              --build-arg "SOURCE_REVISION=$GITHUB_SHA" \
+              -f testing/devnet/eip8321/Dockerfile.native -t "$image" "$OUTPUT_DIR/bin"
+            test "$(docker image inspect "$image" --format '{{.Architecture}}')" = "$ARCH"
+            docker run --rm "$image" --version
+            docker run --rm --entrypoint /bin/sh "$image" -c "test -x /$binary && test -x /app/cmd/$binary/$binary"
+          done
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish revision-specific images
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          for binary in beacon-chain validator; do
+            component="$binary"
+            if [ "$binary" = beacon-chain ]; then component=beacon; fi
+            target="ghcr.io/humantvis/prysm-$component:sha-$GITHUB_SHA-$ARCH"
+            docker tag "prysm-$binary:check" "$target"
+            docker push "$target"
+          done
+
+  manifest:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Combine architectures and publish
+        run: |
+          for component in beacon validator; do
+            image="ghcr.io/humantvis/prysm-$component"
+            docker buildx imagetools create -t "$image:sha-$GITHUB_SHA" \
+              "$image:sha-$GITHUB_SHA-amd64" "$image:sha-$GITHUB_SHA-arm64"
+            if [ "$GITHUB_REF" = refs/heads/eip-8321-heze ]; then
+              docker buildx imagetools create -t "$image:eip8321-minimal" "$image:sha-$GITHUB_SHA"
+            fi
+            docker buildx imagetools inspect "$image:sha-$GITHUB_SHA"
+          done

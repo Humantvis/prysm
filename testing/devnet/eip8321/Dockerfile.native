@@ -1,0 +1,13 @@
+FROM debian:bookworm-slim
+ARG BINARY
+ARG SOURCE_REVISION
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY ${BINARY} /entrypoint
+RUN case "$BINARY" in beacon-chain|validator) ;; *) exit 1 ;; esac \
+    && ln -s /entrypoint /${BINARY} \
+    && mkdir -p /app/cmd/${BINARY} \
+    && ln -s /entrypoint /app/cmd/${BINARY}/${BINARY}
+LABEL org.opencontainers.image.source="https://github.com/Humantvis/prysm"
+LABEL org.opencontainers.image.revision="${SOURCE_REVISION}"
+ENTRYPOINT ["/entrypoint"]
