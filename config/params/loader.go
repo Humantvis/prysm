@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	fieldparams "github.com/OffchainLabs/prysm/v7/config/fieldparams"
 	"github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
 	"github.com/OffchainLabs/prysm/v7/math"
 	"github.com/pkg/errors"
@@ -66,6 +67,10 @@ func UnmarshalConfig(yamlFile []byte, conf *BeaconChainConfig) (*BeaconChainConf
 	// SECONDS_PER_SLOT and SLOT_DURATION_MS express the same value. Track which ones the file
 	// sets so the one left at its preset default can be derived from the other.
 	hasSecondsPerSlot, hasSlotDurationMs := false, false
+	// EIP-8321 is not part of most network configs. Track whether the file sets its fork version so
+	// a missing one can be replaced by a network-specific value (see deriveEip8321ForkVersion).
+	hasEip8321ForkVersion, hasGenesisForkVersion := false, false
+	startedFromPreset := conf == nil
 	// Convert 0x hex inputs to fixed bytes arrays
 	lines := strings.Split(string(yamlFile), "\n")
 	if conf == nil {
@@ -90,6 +95,12 @@ func UnmarshalConfig(yamlFile []byte, conf *BeaconChainConfig) (*BeaconChainConf
 		if strings.HasPrefix(line, "SLOT_DURATION_MS:") {
 			hasSlotDurationMs = true
 		}
+		if strings.HasPrefix(line, "EIP8321_FORK_VERSION:") {
+			hasEip8321ForkVersion = true
+		}
+		if strings.HasPrefix(line, "GENESIS_FORK_VERSION:") {
+			hasGenesisForkVersion = true
+		}
 		if !strings.HasPrefix(line, "#") && strings.Contains(line, "0x") {
 			parts := ReplaceHexStringWithYAMLFormat(line)
 			lines[i] = strings.Join(parts, "\n")
@@ -110,12 +121,34 @@ func UnmarshalConfig(yamlFile []byte, conf *BeaconChainConfig) (*BeaconChainConf
 	if err := reconcileSlotDuration(conf, hasSecondsPerSlot, hasSlotDurationMs); err != nil {
 		return nil, err
 	}
+	// A network config without EIP8321_FORK_VERSION would otherwise inherit the preset's value
+	// (0xe8321000 / 0xe8321001), which already belongs to the built-in mainnet / minimal config, and
+	// the config registry would reject the network as conflicting with it. Patch files applied on top
+	// of an existing config (no GENESIS_FORK_VERSION, conf given) keep the version they inherit.
+	if !hasEip8321ForkVersion && (startedFromPreset || hasGenesisForkVersion) {
+		conf.Eip8321ForkVersion = deriveEip8321ForkVersion(conf.GenesisForkVersion)
+	}
 	// recompute SqrRootSlotsPerEpoch constant to handle non-standard values of SlotsPerEpoch
 	conf.SqrRootSlotsPerEpoch = primitives.Slot(math.IntegerSquareRoot(uint64(conf.SlotsPerEpoch)))
 	// Recompute the fork schedule
 	conf.InitializeForkSchedule()
 	log.Debugf("Config file values: %+v", conf)
 	return conf, nil
+}
+
+// deriveEip8321ForkVersion returns the EIP-8321 fork version used when a network config does not
+// set one: {0xe8, 0x32, genesis[2], genesis[3]}, e.g. genesis 0x10000038 gives 0xe8320038. It stays
+// unique per network like the genesis fork version. 0xe83210xx is reserved for the built-in presets
+// and FillTestVersions, so a genesis whose third byte is 0x10 uses 0xe833 as the prefix instead.
+func deriveEip8321ForkVersion(genesisForkVersion []byte) []byte {
+	v := []byte{0xe8, 0x32, 0, 0}
+	if len(genesisForkVersion) == fieldparams.VersionLength {
+		v[2], v[3] = genesisForkVersion[2], genesisForkVersion[3]
+	}
+	if v[2] == 0x10 {
+		v[1] = 0x33
+	}
+	return v
 }
 
 func UnmarshalConfigFile(path string, conf *BeaconChainConfig) (*BeaconChainConfig, error) {
