@@ -67,7 +67,17 @@ func (v *validator) ProposeBlock(ctx context.Context, slot primitives.Slot, pubK
 	// signature plus a hash-chain reveal instead.
 	epoch := primitives.Epoch(slot / params.BeaconConfig().SlotsPerEpoch)
 	var randaoReveal, hashChainReveal []byte
-	reveal, registered, err := v.nextHashChainRevealFor(ctx, pubKey)
+	// Before the EIP-8321 fork (or when it is not scheduled at all) no
+	// proposer can be registered, so skip the commitment lookup and go
+	// straight to the BLS reveal. The lookup endpoint may not even exist.
+	var (
+		reveal     [32]byte
+		registered bool
+		err        error
+	)
+	if epoch >= params.BeaconConfig().Eip8321ForkEpoch {
+		reveal, registered, err = v.nextHashChainRevealFor(ctx, pubKey)
+	}
 	if err != nil {
 		// Fail closed: no BLS fallback. A BLS reveal from a registered
 		// proposer makes the block invalid; a missed slot costs less.

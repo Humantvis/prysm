@@ -15,6 +15,7 @@ import (
 
 	"github.com/OffchainLabs/prysm/v7/build/bazel"
 	"github.com/OffchainLabs/prysm/v7/config/params"
+	"github.com/OffchainLabs/prysm/v7/consensus-types/primitives"
 	"github.com/OffchainLabs/prysm/v7/io/file"
 	"github.com/OffchainLabs/prysm/v7/testing/assert"
 	"github.com/OffchainLabs/prysm/v7/testing/require"
@@ -555,5 +556,67 @@ func TestConfigToYaml_SlotDuration(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, uint64(500), got.SlotDurationMillis())
 		require.Equal(t, 500*time.Millisecond, got.SlotDuration())
+	})
+}
+
+// A Kurtosis-style devnet config.yaml for a Heze network, without any EIP8321 lines.
+const eip8321DevnetYaml = `PRESET_BASE: 'minimal'
+CONFIG_NAME: 'eip8321-loader-test'
+GENESIS_FORK_VERSION: 0x10000038
+ALTAIR_FORK_VERSION: 0x20000038
+ALTAIR_FORK_EPOCH: 0
+BELLATRIX_FORK_VERSION: 0x30000038
+BELLATRIX_FORK_EPOCH: 0
+CAPELLA_FORK_VERSION: 0x40000038
+CAPELLA_FORK_EPOCH: 0
+DENEB_FORK_VERSION: 0x50000038
+DENEB_FORK_EPOCH: 0
+ELECTRA_FORK_VERSION: 0x60000038
+ELECTRA_FORK_EPOCH: 0
+FULU_FORK_VERSION: 0x70000038
+FULU_FORK_EPOCH: 0
+GLOAS_FORK_VERSION: 0x80000038
+GLOAS_FORK_EPOCH: 0
+HEZE_FORK_VERSION: 0x90000038
+HEZE_FORK_EPOCH: 0
+`
+
+func TestUnmarshalConfig_Eip8321ForkVersion(t *testing.T) {
+	t.Run("missing in devnet config derives non-colliding version", func(t *testing.T) {
+		cfg, err := params.UnmarshalConfig([]byte(eip8321DevnetYaml), nil)
+		require.NoError(t, err)
+		require.Equal(t, params.BeaconConfig().FarFutureEpoch, cfg.Eip8321ForkEpoch)
+		require.DeepEqual(t, []byte{0xe8, 0x32, 0x00, 0x38}, cfg.Eip8321ForkVersion)
+		require.DeepNotEqual(t, params.MinimalSpecConfig().Eip8321ForkVersion, cfg.Eip8321ForkVersion)
+		require.DeepNotEqual(t, params.MainnetConfig().Eip8321ForkVersion, cfg.Eip8321ForkVersion)
+
+		undo, err := params.SetActiveWithUndo(cfg)
+		require.NoError(t, err)
+		require.NoError(t, undo())
+	})
+
+	t.Run("explicit version is kept", func(t *testing.T) {
+		y := eip8321DevnetYaml + "EIP8321_FORK_VERSION: 0xe8321101\nEIP8321_FORK_EPOCH: 5\n"
+		cfg, err := params.UnmarshalConfig([]byte(y), nil)
+		require.NoError(t, err)
+		require.DeepEqual(t, []byte{0xe8, 0x32, 0x11, 0x01}, cfg.Eip8321ForkVersion)
+		require.Equal(t, primitives.Epoch(5), cfg.Eip8321ForkEpoch)
+
+		undo, err := params.SetActiveWithUndo(cfg)
+		require.NoError(t, err)
+		require.NoError(t, undo())
+	})
+
+	t.Run("genesis in reserved preset range avoids preset versions", func(t *testing.T) {
+		cfg, err := params.UnmarshalConfig([]byte("PRESET_BASE: 'mainnet'\nGENESIS_FORK_VERSION: 0x00001000\n"), nil)
+		require.NoError(t, err)
+		require.DeepEqual(t, []byte{0xe8, 0x33, 0x10, 0x00}, cfg.Eip8321ForkVersion)
+	})
+
+	t.Run("patch file on an existing config keeps its version", func(t *testing.T) {
+		base := params.MinimalSpecConfig().Copy()
+		cfg, err := params.UnmarshalConfig([]byte("SLOTS_PER_EPOCH: 8\n"), base)
+		require.NoError(t, err)
+		require.DeepEqual(t, params.MinimalSpecConfig().Eip8321ForkVersion, cfg.Eip8321ForkVersion)
 	})
 }
